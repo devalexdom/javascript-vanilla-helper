@@ -41,7 +41,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.03;
+    this.version = 2.04;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
