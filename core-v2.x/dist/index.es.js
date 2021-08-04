@@ -1,46 +1,21 @@
-interface IJSVHReg {
-  workers: object;
-  pNTouchGesturesHelperFunc: Function;
-  appsRef: object;
-  mainAppRef: object;
-}
+var JSVHBuildType;
 
-interface IJSVHData {
-  reg: IJSVHReg;
-  flags: object;
-}
+(function (JSVHBuildType) {
+  JSVHBuildType[JSVHBuildType["stable"] = 1] = "stable";
+  JSVHBuildType[JSVHBuildType["beta"] = 2] = "beta";
+  JSVHBuildType[JSVHBuildType["nightly"] = 3] = "nightly";
+})(JSVHBuildType || (JSVHBuildType = {}));
 
-export interface IJSVanillaHelper_Extension {
-  version: number;
-  extensionName: string;
-  helperExtensionName?: string;
-  parameters?: object;
-  flags?: object;
-  helper: JSVanillaHelper;
-}
-
-enum JSVHBuildType {
-  stable = 1,
-  beta,
-  nightly
-}
-
-
-export class JSVanillaHelper {
-  version: number;
-  about: string;
-  gitSourceUrl: string;
-  t: any;
-  tData: any;
-  hData: IJSVHData;
-  helperExtensions: object;
-  hexts: object;
-  buildType: JSVHBuildType;
-  constructor(
-    target: any = null,
-    targetData = {},
-    helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
-  ) {
+class JSVanillaHelper {
+  constructor(target = null, targetData = {}, helperData = {
+    reg: {
+      mainAppRef: null,
+      appsRef: {},
+      workers: {},
+      pNTouchGesturesHelperFunc: null
+    },
+    flags: {}
+  }) {
     this.version = 2.03;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper";
     this.buildType = 2;
@@ -52,323 +27,351 @@ export class JSVanillaHelper {
     this.hexts = this.helperExtensions;
   }
 
-  setTarget(t: any = null, tData: object = {}) {
+  setTarget(t = null, tData = {}) {
     this.t = t;
     this.tData = tData;
     return this;
   }
 
-  toInt(t: any = this.t) {
+  toInt(t = this.t) {
     return parseInt(t);
   }
 
-  data(dataObjKey: string, t: HTMLElement = this.t) {
+  data(dataObjKey, t = this.t) {
     if (!t || !t.dataset) {
       this.t = "";
       return this;
     }
+
     this.t = this.t.dataset[dataObjKey];
     return this;
   }
 
-  val(setValue: string, t: HTMLInputElement = this.t) {
+  val(setValue, t = this.t) {
     if (setValue) {
       t.value = setValue;
     }
+
     return t.value;
   }
 
-  firstChildren(query: string, t: Element = this.t): JSVanillaHelper {
+  firstChildren(query, t = this.t) {
     this.setTarget(t.querySelector(query));
     return this;
   }
 
-  children(query: string, t: Element = this.t): JSVanillaHelper {
+  children(query, t = this.t) {
     this.setTarget(t.querySelectorAll(query));
     return this;
   }
 
-  hasOverflow(queryChildrens: string = '', overflowCallback = (el) => { }, t: HTMLElement = this.t): boolean {
+  hasOverflow(queryChildrens = '', overflowCallback = el => {}, t = this.t) {
     let overflow = 0;
+
     const isOverflown = ({
       clientWidth,
       clientHeight,
       scrollWidth,
-      scrollHeight,
+      scrollHeight
     }) => {
       return scrollHeight > clientHeight || scrollWidth > clientWidth;
     };
+
     if (queryChildrens) {
       const currentChildrens = t.querySelectorAll(queryChildrens);
-      this.forEach((child) => {
+      this.forEach(child => {
         if (isOverflown(child)) {
           overflowCallback(child);
           overflow |= 1;
         }
       }, currentChildrens);
     }
-    return !(!overflow);
+
+    return !!overflow;
   }
 
-  findElementIn(parent: HTMLElement, t: any = this.t): Element {
-    const descendants = [...parent.querySelectorAll('*')];
-    return descendants.find((el) => el === t);
+  findElementIn(parent, t = this.t) {
+    const descendants = Array.from(parent.querySelectorAll('*'));
+    return descendants.find(el => el === t);
   }
 
-  alterFontSize(pixelsIn: number = -2, t: any = this.t): void {
-    const fontSize = parseInt(
-      window.getComputedStyle(t).fontSize.replace('px', '')
-    );
+  alterFontSize(pixelsIn = -2, t = this.t) {
+    const fontSize = parseInt(window.getComputedStyle(t).fontSize.replace('px', ''));
     t.style.fontSize = `${fontSize + pixelsIn}px`;
   }
 
-  setMaxViewportScale(maximumScale: string = '', initialScale: string = '1.0'): JSVanillaHelper {
-    const maxScale = maximumScale
-      ? `, maximum-scale=${maximumScale}`
-      : '';
-    const userScalable =
-      maximumScale === initialScale ? ', user-scalable=no' : '';
+  setMaxViewportScale(maximumScale = '', initialScale = '1.0') {
+    const maxScale = maximumScale ? `, maximum-scale=${maximumScale}` : '';
+    const userScalable = maximumScale === initialScale ? ', user-scalable=no' : '';
     const vMetaContent = `width=device-width, initial-scale=${initialScale}${maxScale}${userScalable}`;
     const viewportMeta = document.querySelector('meta[name=viewport]');
+
     if (viewportMeta) {
       viewportMeta.setAttribute("content", vMetaContent);
     } else {
       this.addMeta('viewport', vMetaContent, document.head);
     }
+
     if (maximumScale === initialScale) {
       this.preventNativeTouchGestures(true, document);
     } else {
       this.preventNativeTouchGestures(false, document);
     }
+
     return this;
   }
 
-  preventNativeTouchGestures(prevent: boolean = true, t: any = this.t): void {
+  preventNativeTouchGestures(prevent = true, t = this.t) {
     if (!this.hData.reg.pNTouchGesturesHelperFunc) {
-      this.hData.reg.pNTouchGesturesHelperFunc = (e) => {
+      this.hData.reg.pNTouchGesturesHelperFunc = e => {
         e.preventDefault();
       };
     }
-    const listenerOptions = { passive: false };
+
+    const listenerOptions = {
+      passive: false
+    };
+
     if (prevent) {
-      t.addEventListener(
-        'touchmove',
-        this.hData.reg.pNTouchGesturesHelperFunc,
-        listenerOptions
-      );
+      t.addEventListener('touchmove', this.hData.reg.pNTouchGesturesHelperFunc, listenerOptions);
     } else {
-      t.removeEventListener(
-        'touchmove',
-        this.hData.reg.pNTouchGesturesHelperFunc,
-        listenerOptions
-      );
+      t.removeEventListener('touchmove', this.hData.reg.pNTouchGesturesHelperFunc, listenerOptions);
     }
   }
 
-  getData(t: any = this.t): object {
+  getData(t = this.t) {
     return t.dataset;
   }
 
-  capitalize(t: any = this.t): string {
+  capitalize(t = this.t) {
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
 
-  hideIf(condition: boolean, displayValue: string = '', t: any = this.t): JSVanillaHelper {
+  hideIf(condition, displayValue = '', t = this.t) {
     condition ? this.hide(t) : this.show(displayValue, t);
     return this;
   }
 
-  showIf(condition: boolean, displayValue: string = 'block', t: any = this.t): JSVanillaHelper {
+  showIf(condition, displayValue = 'block', t = this.t) {
     !condition ? this.hide(t) : this.show(displayValue, t);
     return this;
   }
 
-  scrollToTarget(yOffset = 0, behavior: ScrollBehavior = "smooth", t: any = this.t): void {
+  scrollToTarget(yOffset = 0, behavior = "smooth", t = this.t) {
     const y = t.getBoundingClientRect().top + window.pageYOffset + yOffset;
-    window.scrollTo({ top: y, behavior: behavior });
+    window.scrollTo({
+      top: y,
+      behavior: behavior
+    });
   }
 
-  getItemsCountPerRow(t: any = this.t): number {
+  getItemsCountPerRow(t = this.t) {
     let lastXPos = 0;
     let itemsCount = 0;
+
     for (const item of t) {
       const itemXPos = item.getBoundingClientRect().top;
+
       if (itemXPos !== lastXPos && lastXPos !== 0) {
         return itemsCount;
       }
 
       lastXPos = itemXPos;
       itemsCount++;
-
     }
   }
 
-  scrollContainerToTarget(
-    { yOffset = 0, xOffset = 0, behavior = 'smooth' },
-    parentEl = null,
-    t: any = this.t
-  ): void {
+  scrollContainerToTarget({
+    yOffset = 0,
+    xOffset = 0,
+    behavior = 'smooth'
+  }, parentEl = null, t = this.t) {
     const containerEl = !parentEl ? t.parentNode : parentEl;
     const y = t.offsetTop + yOffset;
     const x = t.offsetLeft + xOffset;
-    containerEl.scrollTo({ top: y, left: x, behavior });
+    containerEl.scrollTo({
+      top: y,
+      left: x,
+      behavior
+    });
   }
 
-  onFalseEmptyString(t: any = this.t): string {
+  onFalseEmptyString(t = this.t) {
     return !t ? '' : t;
   }
 
-  isIterable(t: any = this.t): boolean {
+  isIterable(t = this.t) {
     return Symbol.iterator in Object(t);
   }
 
-  isDateObj(t: Date = this.t): boolean {
+  isDateObj(t = this.t) {
     return t instanceof Date && Object.prototype.toString.call(t) === "[object Date]";
   }
 
-  isZeroLength(t: any = this.t): boolean {
+  isZeroLength(t = this.t) {
     return t.length === 0;
   }
 
-  isEmpty(t: any = this.t): boolean {
+  isEmpty(t = this.t) {
     if (t == null) return true;
     const type = typeof t;
     if (type === 'string' || Array.isArray(t)) return this.isZeroLength(t);
     return this.isZeroLength(Object.keys(t));
   }
 
-  onEvent(eventName: string, actionCallback: Function, t: any = this.t): object {
+  onEvent(eventName, actionCallback, t = this.t) {
     const removeListener = () => {
       t.removeEventListener(eventName, callback, false);
     };
-    const callback = (e) => {
+
+    const callback = e => {
       actionCallback(e, removeListener);
     };
+
     t.addEventListener(eventName, callback, false);
-    return { helper: this, removeListener };
+    return {
+      helper: this,
+      removeListener
+    };
   }
 
-  onEvents(eventName: Array<string>, actionCallback, t: any = this.t): JSVanillaHelper {
+  onEvents(eventName, actionCallback, t = this.t) {
     const removeListener = () => {
-      this.forEach((eventName) => {
+      this.forEach(eventName => {
         t.removeEventListener(eventName, callback, false);
       }, eventName);
     };
-    const callback = (e) => {
+
+    const callback = e => {
       actionCallback(e, removeListener);
     };
-    this.forEach((eventName) => {
+
+    this.forEach(eventName => {
       t.addEventListener(eventName, callback, false);
     }, eventName);
     return this;
   }
 
-  $$(newScope: Function): void {
+  $$(newScope) {
     newScope(new JSVanillaHelper(this.t, this.tData));
   }
 
-  get(index: number): any {
+  get(index) {
     return index || index === 0 ? this.t[index] : this.t;
   }
 
-  sel(index: number): JSVanillaHelper {
+  sel(index) {
     if (index || index === 0) {
       this.t = this.t[index];
     }
+
     return this;
   }
 
-  log(t: any = this.t): JSVanillaHelper {
+  log(t = this.t) {
     console.log(t);
     return this;
   }
 
-  addHelperExtension(extension: IJSVanillaHelper_Extension): JSVanillaHelper {
+  addHelperExtension(extension) {
     const extensionName = extension.extensionName || extension.helperExtensionName;
+
     if (!this.hexts[extensionName]) {
       extension.helper = this;
       this.hexts[extensionName] = extension;
+
       if (typeof this.hexts[extensionName].onAddExtension === "function") {
         const bindedFunc = this.hexts[extensionName].onAddExtension.bind(extension);
         bindedFunc();
       }
     }
+
     return this;
   }
 
-  removeHelperExtension(extensionName: string): JSVanillaHelper {
+  removeHelperExtension(extensionName) {
     delete this.hexts[extensionName];
     return this;
   }
 
-  getTextRenderedSize(font: string = '16px Arial', widthLimit: number = 0, t: any = this.t): object {
+  getTextRenderedSize(font = '16px Arial', widthLimit = 0, t = this.t) {
     // Max font-size will only work in px
     const changeFontSize = (newSize, contextFont) => {
-      return (contextFont = contextFont.replace(/\d+px/, newSize));
+      return contextFont = contextFont.replace(/\d+px/, newSize);
     };
+
     const textEl = document.createElement('canvas');
     const context = textEl.getContext('2d');
     context.font = font;
     const textMesure = context.measureText(t);
-    const height =
-      textMesure.actualBoundingBoxAscent + textMesure.actualBoundingBoxDescent;
-
+    const height = textMesure.actualBoundingBoxAscent + textMesure.actualBoundingBoxDescent;
     let maxFontSizePX = parseFloat(font.match(/\d+px/)[0].replace('px', ''));
+
     if (widthLimit > 0) {
       while (context.measureText(t).width > widthLimit && maxFontSizePX > 0) {
         maxFontSizePX--;
         context.font = changeFontSize(`${maxFontSizePX}px`, context.font);
       }
     }
-    return { width: textMesure.width, height, maxFontSizePX };
+
+    return {
+      width: textMesure.width,
+      height,
+      maxFontSizePX
+    };
   }
 
-  getFontUsed(property: string = 'font', t: any = this.t): string {
+  getFontUsed(property = 'font', t = this.t) {
     return this.getRenderedStyle(property, t);
   }
 
-  getRenderedStyle(property: string = 'color', t: any = this.t): string {
+  getRenderedStyle(property = 'color', t = this.t) {
     const computedStyle = window.getComputedStyle(t, null);
     return computedStyle.getPropertyValue(property);
   }
 
-  forEach(iteration: Function, t: any = this.t): JSVanillaHelper {
+  forEach(iteration, t = this.t) {
     [].forEach.call(t, iteration);
     return this;
   }
 
-  whileEach(iteration: Function, t: any = this.t): JSVanillaHelper {
+  whileEach(iteration, t = this.t) {
     const iterableLength = t.length;
     let i = 0;
     let loop = true;
+
     const stop = () => {
       loop = false;
       return t[i];
     };
+
     while (loop && i < iterableLength) {
       iteration(t[i], i, stop);
       i++;
     }
+
     return this;
   }
 
-  reverseEach(iteration: Function, t: any = this.t): JSVanillaHelper {
+  reverseEach(iteration, t = this.t) {
     let i = t.length;
+
     while (i--) {
       iteration(t[i], i);
     }
+
     return this;
   }
 
-  eachOne(helperFunction: string = '', args = []): void {
+  eachOne(helperFunction = '', args = []) {
     const newInstance = new JSVanillaHelper();
-    this.forEach((item) => {
+    this.forEach(item => {
       newInstance.setTarget(item);
       newInstance[helperFunction].apply(newInstance, args);
     }, this.t);
   }
 
-  waitFor(timeInMs: number = 0, helperFunction: string = '', args = []): JSVanillaHelper {
+  waitFor(timeInMs = 0, helperFunction = '', args = []) {
     const newInstance = new JSVanillaHelper(this.t, this.tData);
     setTimeout(() => {
       newInstance[helperFunction].apply(newInstance, args);
@@ -376,25 +379,29 @@ export class JSVanillaHelper {
     return this;
   }
 
-  waitThen(timeInMs: number = 0, timeoutCallback: Function): object {
+  waitThen(timeInMs = 0, timeoutCallback) {
     const newInstance = new JSVanillaHelper(this.t, this.tData);
     const timeout = setTimeout(() => {
       timeoutCallback(newInstance);
     }, timeInMs);
+
     const clear = () => {
       clearTimeout(timeout);
     };
-    return { helper: newInstance, clear, timeout };
+
+    return {
+      helper: newInstance,
+      clear,
+      timeout
+    };
   }
 
-  objForEach(iteration: Function, t: any = this.t): JSVanillaHelper {
-    [].forEach.call(Object.keys(t), (value, index) =>
-      iteration(t[value], value, index)
-    );
+  objForEach(iteration, t = this.t) {
+    [].forEach.call(Object.keys(t), (value, index) => iteration(t[value], value, index));
     return this;
   }
 
-  toggleMaximize(t: any = this.t): JSVanillaHelper {
+  toggleMaximize(t = this.t) {
     if (!t.classList.contains('vjs-helper-maximized')) {
       t.style.height = `${window.innerHeight}px`;
       t.style.width = `${window.innerWidth}px`;
@@ -402,53 +409,61 @@ export class JSVanillaHelper {
       t.style.height = '';
       t.style.width = '';
     }
+
     this.toggleClass('vjs-helper-maximized', t);
     return this;
   }
 
-  setAttr(attrName: string = 'src', attrValue: string = '', t: any = this.t): JSVanillaHelper {
+  setAttr(attrName = 'src', attrValue = '', t = this.t) {
     this.t.setAttribute(attrName, attrValue);
     return this;
   }
 
-  setId(id: string = '', t: any = this.t): JSVanillaHelper {
+  setId(id = '', t = this.t) {
     this.t.id = id;
     return this;
   }
 
-  setClass(className: string = '', t: any = this.t): JSVanillaHelper {
+  setClass(className = '', t = this.t) {
     this.t.className = className;
     return this;
   }
 
-  addBrowserClass(t: any = this.t): void {
+  addBrowserClass(t = this.t) {
     t.classList.add(this.detectBrowser());
   }
 
-  detectBrowser(): string {
+  detectBrowser() {
     const uA = navigator.userAgent;
+
     if (uA.includes('Edge')) {
       return 'ms-edge';
     }
+
     if (uA.includes('Edg')) {
       return 'ms-edge-chromium';
     }
+
     if (uA.includes('Chrome')) {
       return 'chrome';
     }
+
     if (uA.includes('Safari') && !uA.includes('Chrome')) {
       return 'safari';
     }
+
     if (uA.includes('Firefox')) {
       return 'firefox';
     }
+
     if (uA.includes('MSIE') || !!uA.match(/Trident.*rv\:11\./)) {
       return 'ms-ie';
     }
+
     return 'other-browser';
   }
 
-  nextQuerySign(t: any = this.t) {
+  nextQuerySign(t = this.t) {
     return t.includes('?') ? '&' : '?';
   }
 
@@ -456,7 +471,7 @@ export class JSVanillaHelper {
     return this.setTarget(document.createElement(tag));
   }
 
-  hasChildren(t: any = this.t) {
+  hasChildren(t = this.t) {
     return t.children.length > 0;
   }
 
@@ -464,42 +479,43 @@ export class JSVanillaHelper {
     if (arrayObj.length > 0) {
       return arrayObj[0];
     }
+
     return null;
   }
 
-  show(displayValue = '', t: any = this.t) {
+  show(displayValue = '', t = this.t) {
     t.style.display = displayValue;
     return this;
   }
 
-  hide(t: any = this.t) {
+  hide(t = this.t) {
     t.style.display = 'none';
     return this;
   }
 
-  hideIn(timeInMs = 0, t: any = this.t) {
+  hideIn(timeInMs = 0, t = this.t) {
     this.waitFor(timeInMs, 'hide', [t]);
     return this;
   }
 
-  addClass(className, t: any = this.t) {
+  addClass(className, t = this.t) {
     t.classList.add(className);
     return this;
   }
 
-  addClasses(classNames = [], t: any = this.t) {
+  addClasses(classNames = [], t = this.t) {
     t.classList.add.apply(t.classList, classNames);
     return this;
   }
 
-  addMeta(name = '', content = '', t: any = this.t) {
+  addMeta(name = '', content = '', t = this.t) {
     const meta = document.createElement('meta');
     meta.name = name;
     meta.content = content;
     t.appendChild(meta);
   }
 
-  addScriptFile(src = '', onload = () => { }, id = '', t: any = this.t) {
+  addScriptFile(src = '', onload = () => {}, id = '', t = this.t) {
     const scriptEl = document.createElement('script');
     scriptEl.src = src;
     scriptEl.id = id;
@@ -507,7 +523,7 @@ export class JSVanillaHelper {
     t.appendChild(scriptEl);
   }
 
-  addStyleInline(css = '', t: any = this.t) {
+  addStyleInline(css = '', t = this.t) {
     const styleEl = document.createElement('style');
     styleEl.innerHTML = css;
     t.appendChild(styleEl);
@@ -518,93 +534,104 @@ export class JSVanillaHelper {
   }
 
   delayFunc() {
-    return (function () {
+    return function () {
       let timer = null;
       return function (callback, ms) {
         clearTimeout(timer);
         timer = setTimeout(callback, ms);
       };
-    })();
+    }();
   }
 
-  removeClass(className, t: any = this.t) {
+  removeClass(className, t = this.t) {
     t.classList.remove(className);
     return this;
   }
 
-  toggleClass(className, t: any = this.t) {
+  toggleClass(className, t = this.t) {
     t.classList.toggle(className);
     return this;
   }
 
-  swapClass(className, className2, t: any = this.t) {
+  swapClass(className, className2, t = this.t) {
     this.toggleClass(className, t);
     this.toggleClass(className2, t);
     return this;
   }
 
-  replaceClass(className, className2, t: any = this.t) {
+  replaceClass(className, className2, t = this.t) {
     t.classList.replace(className, className2);
     return this;
   }
 
-  flagClass(condition = false, className, t: any = this.t) {
+  flagClass(condition = false, className, t = this.t) {
     condition ? t.classList.add(className) : t.classList.remove(className);
     return this;
   }
 
-  hasClass(className, t: any = this.t) {
+  hasClass(className, t = this.t) {
     return t.classList.contains(className);
   }
-
   /* The correct implementation is to use Logical OR assignment (||=) but is not supported on Safari < 14 and generates critical syntax error. */
-  hasClasses(classNamesArr = [], t: any = this.t) {
-    return !(!classNamesArr.reduce((has, item) => {
+
+
+  hasClasses(classNamesArr = [], t = this.t) {
+    return !!classNamesArr.reduce((has, item) => {
       return has |= t.classList.contains(item);
-    }, false));
+    }, false);
   }
 
-  removeAllChildren(t: any = this.t) {
+  removeAllChildren(t = this.t) {
     while (t.firstChild) {
       t.removeChild(t.firstChild);
     }
+
     return this;
   }
-
   /* Nullable helper method, V(obj).N('maybeUndefinedProperty') equals to obj?.maybeUndefinedProperty */
-  N(objPropertyStr, t: any = this.t) {
+
+
+  N(objPropertyStr, t = this.t) {
     if (!t) {
       return null;
     }
+
     if (typeof t[objPropertyStr] === 'undefined') {
       return null;
     }
+
     return t[objPropertyStr];
   }
 
-  sortArrayByProperty(property = '', order = 1, t: any = this.t) {
-    t.sort((a, b) => (a[property] > b[property] ? 1 : -1 * order));
+  sortArrayByProperty(property = '', order = 1, t = this.t) {
+    t.sort((a, b) => a[property] > b[property] ? 1 : -1 * order);
   }
 
-  sortArray(order = 1, t: any = this.t) {
-    t.sort((a, b) => (a > b ? 1 : -1 * order));
+  sortArray(order = 1, t = this.t) {
+    t.sort((a, b) => a > b ? 1 : -1 * order);
   }
 
-  sortNodeChildsByProperty(property = '', order = 1, t: any = this.t) {
-    [...t.children]
-      .sort((a, b) => (a[property] > b[property] ? 1 : -1 * order))
-      .map((node) => t.appendChild(node));
+  sortNodeChildsByProperty(property = '', order = 1, t = this.t) {
+    [...t.children].sort((a, b) => a[property] > b[property] ? 1 : -1 * order).map(node => t.appendChild(node));
   }
 
-  mutationObserver(actionCallback, { observeAttributes = ["class"], observeMutationTypes = [],
-    observeMultipleMutations = false, nativeObserverConfig = { attributes: true } } = {}, t: any = this.t) {
+  mutationObserver(actionCallback, {
+    observeAttributes = ["class"],
+    observeMutationTypes = [],
+    observeMultipleMutations = false,
+    nativeObserverConfig = {
+      attributes: true
+    }
+  } = {}, t = this.t) {
     const stopObserver = () => {
       observer.disconnect();
     };
-    const callback = (mutation) => {
+
+    const callback = mutation => {
       actionCallback(mutation, stopObserver);
     };
-    const observer = new MutationObserver((mutations) => {
+
+    const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         if (observeAttributes.includes(mutation.attributeName) || observeMutationTypes.includes(mutation.type)) {
           callback(mutation);
@@ -615,21 +642,20 @@ export class JSVanillaHelper {
     observer.observe(t, nativeObserverConfig);
   }
 
-  resizeObserver(onResize, t: any = this.t) {
+  resizeObserver(onResize, t = this.t) {
     const initialClientRect = t.getBoundingClientRect();
     let lastClientRect = initialClientRect;
+
     if (typeof ResizeObserver === 'function') {
-      const nativeResizeObserver = new ResizeObserver((entries) => {
+      const nativeResizeObserver = new ResizeObserver(entries => {
         const clientRect = t.getBoundingClientRect();
-        if (
-          lastClientRect.width !== clientRect.width ||
-          lastClientRect.height !== clientRect.height
-        ) {
+
+        if (lastClientRect.width !== clientRect.width || lastClientRect.height !== clientRect.height) {
           // To avoid false positive on observation start
           lastClientRect = clientRect;
           this.tData = {
             initialClientRect,
-            clientRect,
+            clientRect
           };
           onResize(this);
         }
@@ -638,14 +664,12 @@ export class JSVanillaHelper {
     } else {
       window.addEventListener('resize', () => {
         const clientRect = t.getBoundingClientRect();
-        if (
-          lastClientRect.width !== clientRect.width ||
-          lastClientRect.height !== clientRect.height
-        ) {
+
+        if (lastClientRect.width !== clientRect.width || lastClientRect.height !== clientRect.height) {
           lastClientRect = clientRect;
           this.tData = {
             initialClientRect,
-            clientRect,
+            clientRect
           };
           onResize(this);
         }
@@ -653,38 +677,32 @@ export class JSVanillaHelper {
     }
   }
 
-  hasAttribute(AttributeName = '', t: any = this.t) {
+  hasAttribute(AttributeName = '', t = this.t) {
     return !(t.getAttribute(AttributeName) == null);
   }
 
-  isVisible(verticalOffset = 0, t: any = this.t) {
+  isVisible(verticalOffset = 0, t = this.t) {
     return this.getVisibilityData(verticalOffset, t).visible;
   }
 
-  isRendered(verticalOffset = 0, t: any = this.t) {
+  isRendered(verticalOffset = 0, t = this.t) {
     return this.getVisibilityData(verticalOffset, t).rendered;
   }
 
-  isElementBound(child, padding, t: any = this.t) {
-    return (
-      t.getBoundingClientRect().right >=
-      child.getBoundingClientRect().right + padding
-    ); // helper t as parent
+  isElementBound(child, padding, t = this.t) {
+    return t.getBoundingClientRect().right >= child.getBoundingClientRect().right + padding; // helper t as parent
   }
 
-  getVisibilityData(verticalOffset = 0, t: any = this.t) {
+  getVisibilityData(verticalOffset = 0, t = this.t) {
     let visible = false;
     let rendered = false;
     const cR = t.getBoundingClientRect();
-    const windowHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const windowWidth =
-      window.innerWidth || document.documentElement.clientWidth;
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
     if (!(cR.height == 0 && cR.width == 0 && cR.top == 0 && cR.left == 0)) {
       rendered = true;
-      const vertInView =
-        cR.top - verticalOffset <= windowHeight &&
-        cR.top + cR.height + verticalOffset >= 0;
+      const vertInView = cR.top - verticalOffset <= windowHeight && cR.top + cR.height + verticalOffset >= 0;
       const horInView = cR.left <= windowWidth && cR.left + cR.width >= 0;
       visible = vertInView && horInView;
     }
@@ -692,16 +710,10 @@ export class JSVanillaHelper {
     this.tData.rendered = rendered;
     this.tData.visible = visible;
     this.tData.clientRect = cR;
-
     return this.tData;
   }
 
-  addAnimation(
-    elProperty = 'margin-top',
-    value = '50px',
-    durationInS = 0.5,
-    t: any = this.t
-  ) {
+  addAnimation(elProperty = 'margin-top', value = '50px', durationInS = 0.5, t = this.t) {
     if (t.style.transition !== '') {
       if (!t.style.transition.includes(elProperty)) {
         t.style.transition += `, ${elProperty} ${durationInS}s`;
@@ -711,16 +723,15 @@ export class JSVanillaHelper {
     }
 
     const hyphen = elProperty.indexOf('-');
+
     if (hyphen > -1) {
-      elProperty =
-        elProperty.substr(0, hyphen) +
-        elProperty.charAt(hyphen + 1).toUpperCase() +
-        elProperty.substr(hyphen + 2, elProperty.length);
+      elProperty = elProperty.substr(0, hyphen) + elProperty.charAt(hyphen + 1).toUpperCase() + elProperty.substr(hyphen + 2, elProperty.length);
     }
+
     t.style[elProperty] = value;
   }
 
-  dispatchEvent(eventName, t: any = this.t) {
+  dispatchEvent(eventName, t = this.t) {
     const event = new Event(eventName);
     t.dispatchEvent(event);
     return this;
@@ -732,10 +743,11 @@ export class JSVanillaHelper {
     } catch (e) {
       return false;
     }
+
     return true;
   }
 
-  isPlainObject(t: any = this.t) {
+  isPlainObject(t = this.t) {
     return Object.prototype.toString.call(t) === '[object Object]';
   }
 
@@ -744,6 +756,7 @@ export class JSVanillaHelper {
     let value = '';
     this.whileEach((c, i, stop) => {
       c = c.trim();
+
       if (c.indexOf(name) === 0) {
         value = c.substring(name.length, c.length);
         stop();
@@ -759,77 +772,70 @@ export class JSVanillaHelper {
     document.cookie = `${cName}=${cValue}; ${expires};path=/`;
   }
 
-  basicImageLazyLoader(
-    imagedataAttrName = '[data-image-src]',
-    bgImagedataAttrName = '[data-bgimage-src]',
-    t: any = this.t
-  ) {
+  basicImageLazyLoader(imagedataAttrName = '[data-image-src]', bgImagedataAttrName = '[data-bgimage-src]', t = this.t) {
     const imagesLazyLoad = t.querySelectorAll(imagedataAttrName);
     const bgimagesLazyLoad = t.querySelectorAll(bgImagedataAttrName);
-
-    this.forEach((el) => {
+    this.forEach(el => {
       el.src = el.dataset.imageSrc;
     }, imagesLazyLoad);
-    this.forEach((el) => {
+    this.forEach(el => {
       el.style.backgroundImage = `url("${el.dataset.bgimageSrc}")`;
     }, bgimagesLazyLoad);
   }
 
-  noSourceConsole(logType = 'log', t: any = this.t) {
+  noSourceConsole(logType = 'log', t = this.t) {
     setTimeout(console[logType].bind(console, t));
   }
 
-  console(logType = 'log', t: any = this.t) {
+  console(logType = 'log', t = this.t) {
     console[logType](t);
   }
 
   getPageHeight() {
-    const { body } = document;
+    const {
+      body
+    } = document;
     const html = document.documentElement;
-
-    return Math.max(
-      body.scrollHeight,
-      body.offsetHeight,
-      html.clientHeight,
-      html.scrollHeight,
-      html.offsetHeight
-    );
+    return Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
   }
 
-  makeInmutable(t: any = this.t) {
+  makeInmutable(t = this.t) {
     const propNames = Object.getOwnPropertyNames(t);
     let i = propNames.length;
+
     while (i--) {
       const value = t[propNames[i]];
+
       if (typeof value === 'object') {
         this.makeInmutable(value);
       }
     }
+
     return Object.freeze(t);
   }
 
-  onScroll(
-    {
-      offsetTop = 0,
-      top: topCallback,
-      down: downCallback,
-      up: upCallback,
-      disableFlagMode = false,
-    },
-    t: any = this.t
-  ) {
+  onScroll({
+    offsetTop = 0,
+    top: topCallback,
+    down: downCallback,
+    up: upCallback,
+    disableFlagMode = false
+  }, t = this.t) {
     let downFlag = false;
     let lastScroll = 0;
-    const setOffsetTop = (newOffsetTop) => {
+
+    const setOffsetTop = newOffsetTop => {
       offsetTop = newOffsetTop;
     };
 
     t.addEventListener('scroll', () => {
       const currentScroll = window.pageYOffset;
+
       if (currentScroll < offsetTop) {
         if (topCallback) topCallback(setOffsetTop);
         return;
       }
+
       if (!disableFlagMode) {
         if (currentScroll > lastScroll && !downFlag) {
           // down
@@ -852,67 +858,67 @@ export class JSVanillaHelper {
     });
   }
 
-  getJSONObject(
-    url = '',
-    actions,
-    parameters = {
-      url: "",
-      dataToSend: null,
-      withCredentials: false,
-      requestMethod: 'GET',
-      enableJson: { onResponse: true, onSend: false, onError: true },
+  getJSONObject(url = '', actions, parameters = {
+    url: "",
+    dataToSend: null,
+    withCredentials: false,
+    requestMethod: 'GET',
+    enableJson: {
+      onResponse: true,
+      onSend: false,
+      onError: true
     }
-  ) {
+  }) {
     parameters.url = url;
     this.AJAX(parameters, actions);
   }
 
-  postJSONObject(
-    url = "",
-    data = {},
-    actions,
-    parameters = {
-      url: "",
-      dataToSend: {},
-      withCredentials: false,
-      requestMethod: 'POST',
-      enableJson: { onResponse: true, onSend: true, onError: true },
-      requestContent: 'json',
-    }
-  ) {
+  postJSONObject(url = "", data = {}, actions, parameters = {
+    url: "",
+    dataToSend: {},
+    withCredentials: false,
+    requestMethod: 'POST',
+    enableJson: {
+      onResponse: true,
+      onSend: true,
+      onError: true
+    },
+    requestContent: 'json'
+  }) {
     parameters.url = url;
     parameters.dataToSend = data;
     this.AJAX(parameters, actions);
   }
 
-  AJAX(
-    {
-      url = '',
-      requestMethod = 'POST',
-      withCredentials = false,
-      dataToSend = null,
-      async = true,
-      enableJson = { onResponse: false, onSend: false, onError: false },
-      requestContent = 'text',
-      timeoutError = 10000,
+  AJAX({
+    url = '',
+    requestMethod = 'POST',
+    withCredentials = false,
+    dataToSend = null,
+    async = true,
+    enableJson = {
+      onResponse: false,
+      onSend: false,
+      onError: false
     },
-    actions = {
-      onSuccess: (callback) => { },
-      onError: (callback) => { },
-      onOtherStatus: (callback) => { },
-    }
-  ) {
+    requestContent = 'text',
+    timeoutError = 10000
+  }, actions = {
+    onSuccess: callback => {},
+    onError: callback => {},
+    onOtherStatus: callback => {}
+  }) {
     const xhr = new XMLHttpRequest();
     let errorThrown = false;
     let fd = null;
     let dataOutgoing = null;
     let timeout = null;
+
     if (timeoutError) {
       timeout = setTimeout(() => {
         ajaxHelperObj.xhrStatusCode = 408;
         ajaxHelperObj.errorType = 'TIMEOUT';
-        ajaxHelperObj.errorDetails +=
-          `Response time exceeded ${timeoutError}ms` + '\n';
+        ajaxHelperObj.errorDetails += `Response time exceeded ${timeoutError}ms` + '\n';
         actions.onError(ajaxHelperObj);
         errorThrown = true;
       }, timeoutError);
@@ -933,64 +939,70 @@ export class JSVanillaHelper {
         ajaxHelperObj.errorType = 'JSON';
         ajaxHelperObj.errorDetails += `${e}\n`;
       }
+
       actions.onError(ajaxHelperObj);
       errorThrown = true;
       return null;
     };
 
-    const handleResponse = (enableJsonOption) => {
-      ajaxHelperObj.response = enableJsonOption
-        ? handleJson(ajaxHelperObj.xhrResponseText, true)
-        : ajaxHelperObj.xhrResponseText;
+    const handleResponse = enableJsonOption => {
+      ajaxHelperObj.response = enableJsonOption ? handleJson(ajaxHelperObj.xhrResponseText, true) : ajaxHelperObj.xhrResponseText;
     };
 
     xhr.open(requestMethod, url, async);
+
     if (requestMethod === 'POST') {
       requestContent = enableJson.onSend ? 'json' : requestContent;
+
       switch (requestContent) {
         case 'json':
-          xhr.setRequestHeader(
-            'Content-Type',
-            'application/json; charset=UTF-8'
-          );
+          xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
           dataOutgoing = handleJson(dataToSend, false);
           break;
+
         case 'form':
           fd = new FormData();
+
           for (const name in dataToSend) {
             fd.append(name, dataToSend[name]);
           }
+
           xhr.setRequestHeader('Content-Type', 'multipart/form-data');
           break;
+
         case 'form-dom-el':
           fd = new FormData(dataToSend);
           xhr.setRequestHeader('Content-Type', 'multipart/form-data');
           break;
+
         case 'form-urlencoded':
           enableJson.onSend = false;
           const formData = [];
+
           for (const property in dataToSend) {
             const encodedKey = encodeURIComponent(property);
             const encodedValue = encodeURIComponent(dataToSend[property]);
             formData.push(`${encodedKey}=${encodedValue}`);
           }
+
           dataOutgoing = formData.join('&');
-          xhr.setRequestHeader(
-            'Content-Type',
-            'application/x-www-form-urlencoded;charset=UTF-8'
-          );
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
           break;
+
         default:
           xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
           dataOutgoing = dataToSend;
           break;
       }
     }
+
     xhr.withCredentials = withCredentials;
+
     xhr.onload = () => {
       ajaxHelperObj.xhrResponseText = xhr.responseText;
       ajaxHelperObj.xhrStatusCode = xhr.status;
       clearTimeout(timeout);
+
       if (xhr.status >= 200 && xhr.status < 300) {
         handleResponse(enableJson.onResponse);
         actions.onSuccess(ajaxHelperObj);
@@ -1001,6 +1013,7 @@ export class JSVanillaHelper {
         actions.onOtherStatus(ajaxHelperObj);
       }
     };
+
     if (!fd) {
       xhr.send(dataOutgoing);
     } else {
@@ -1008,33 +1021,29 @@ export class JSVanillaHelper {
     }
   }
 
-  initializeApp(setAsMainApp: boolean): void {
-    console.error("App Architecture extension not found in this JSVanillaHelper (Core) instance")
+  initializeApp(setAsMainApp) {
+    console.error("App Architecture extension not found in this JSVanillaHelper (Core) instance");
   }
+
 }
-
-export const defaultJSVHInstance = new JSVanillaHelper();
-
-export const V = (t = null) => {
+const defaultJSVHInstance = new JSVanillaHelper();
+const V = (t = null) => {
   return defaultJSVHInstance.setTarget(t);
 };
-
-export const V$C = (cN = '') => {
+const V$C = (cN = '') => {
   return defaultJSVHInstance.setTarget(document.getElementsByClassName(cN));
 };
-
-export const V$I = (id = '') => {
+const V$I = (id = '') => {
   return defaultJSVHInstance.setTarget(document.getElementById(id));
 };
-
-export const V$ = (t = null) => {
+const V$ = (t = null) => {
   return defaultJSVHInstance.setTarget(document.querySelectorAll(t));
 };
-
-export const _V = (t = null) => {
+const _V = (t = null) => {
   return new JSVanillaHelper(t);
 };
-
-export const _V$ = (t = null) => {
+const _V$ = (t = null) => {
   return new JSVanillaHelper(document.querySelectorAll(t));
 };
+
+export { JSVanillaHelper, V, V$, V$C, V$I, _V, _V$, defaultJSVHInstance };
