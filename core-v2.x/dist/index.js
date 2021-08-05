@@ -20,8 +20,8 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.05;
-    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper";
+    this.version = 2.06;
+    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
     this.t = target;
@@ -1030,24 +1030,24 @@ class JSVanillaHelper {
   }
 
 }
-const defaultJSVHInstance = new JSVanillaHelper();
-const V = (t = null) => {
-  return defaultJSVHInstance.setTarget(t);
+const defaultHelperInstance = new JSVanillaHelper();
+const V = (target = null) => {
+  return defaultHelperInstance.setTarget(target);
 };
-const V$C = (cN = '') => {
-  return defaultJSVHInstance.setTarget(document.getElementsByClassName(cN));
+const V$C = (className = '') => {
+  return defaultHelperInstance.setTarget(document.getElementsByClassName(className));
 };
 const V$I = (id = '') => {
-  return defaultJSVHInstance.setTarget(document.getElementById(id));
+  return defaultHelperInstance.setTarget(document.getElementById(id));
 };
-const V$ = (t = null) => {
-  return defaultJSVHInstance.setTarget(document.querySelectorAll(t));
+const V$ = (query = null) => {
+  return defaultHelperInstance.setTarget(document.querySelectorAll(query));
 };
-const _V = (t = null) => {
-  return new JSVanillaHelper(t);
+const _V = (target = null) => {
+  return new JSVanillaHelper(target);
 };
-const _V$ = (t = null) => {
-  return new JSVanillaHelper(document.querySelectorAll(t));
+const _V$ = (query = null) => {
+  return new JSVanillaHelper(document.querySelectorAll(query));
 };
 
 exports.JSVanillaHelper = JSVanillaHelper;
@@ -1057,4 +1057,4 @@ exports.V$C = V$C;
 exports.V$I = V$I;
 exports._V = _V;
 exports._V$ = _V$;
-exports.defaultJSVHInstance = defaultJSVHInstance;
+exports.defaultHelperInstance = defaultHelperInstance;

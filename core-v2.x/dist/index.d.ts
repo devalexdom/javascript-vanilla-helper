@@ -184,11 +184,11 @@ export declare class JSVanillaHelper {
     }): void;
     initializeApp(setAsMainApp: boolean): void;
 }
-export declare const defaultJSVHInstance: JSVanillaHelper;
-export declare const V: (t?: any) => JSVanillaHelper;
-export declare const V$C: (cN?: string) => JSVanillaHelper;
+export declare const defaultHelperInstance: JSVanillaHelper;
+export declare const V: (target?: any) => JSVanillaHelper;
+export declare const V$C: (className?: string) => JSVanillaHelper;
 export declare const V$I: (id?: string) => JSVanillaHelper;
-export declare const V$: (t?: any) => JSVanillaHelper;
-export declare const _V: (t?: any) => JSVanillaHelper;
-export declare const _V$: (t?: any) => JSVanillaHelper;
+export declare const V$: (query?: string) => JSVanillaHelper;
+export declare const _V: (target?: any) => JSVanillaHelper;
+export declare const _V$: (query?: string) => JSVanillaHelper;
 export {};

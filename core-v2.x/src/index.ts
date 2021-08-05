@@ -41,8 +41,8 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.05;
-    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper";
+    this.version = 2.06;
+    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
     this.t = target;
@@ -1013,28 +1013,28 @@ export class JSVanillaHelper {
   }
 }
 
-export const defaultJSVHInstance = new JSVanillaHelper();
+export const defaultHelperInstance = new JSVanillaHelper();
 
-export const V = (t = null) => {
-  return defaultJSVHInstance.setTarget(t);
+export const V = (target: any = null) => {
+  return defaultHelperInstance.setTarget(target);
 };
 
-export const V$C = (cN = '') => {
-  return defaultJSVHInstance.setTarget(document.getElementsByClassName(cN));
+export const V$C = (className: string = '') => {
+  return defaultHelperInstance.setTarget(document.getElementsByClassName(className));
 };
 
-export const V$I = (id = '') => {
-  return defaultJSVHInstance.setTarget(document.getElementById(id));
+export const V$I = (id: string = '') => {
+  return defaultHelperInstance.setTarget(document.getElementById(id));
 };
 
-export const V$ = (t = null) => {
-  return defaultJSVHInstance.setTarget(document.querySelectorAll(t));
+export const V$ = (query: string = null) => {
+  return defaultHelperInstance.setTarget(document.querySelectorAll(query));
 };
 
-export const _V = (t = null) => {
-  return new JSVanillaHelper(t);
+export const _V = (target: any = null) => {
+  return new JSVanillaHelper(target);
 };
 
-export const _V$ = (t = null) => {
-  return new JSVanillaHelper(document.querySelectorAll(t));
+export const _V$ = (query: string = null) => {
+  return new JSVanillaHelper(document.querySelectorAll(query));
 };
