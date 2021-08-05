@@ -1,6 +1,6 @@
 {
   "name": "jsvanillahelper-core",
-  "version": "2.0.6",
+  "version": "2.0.61",
   "description": "Lightweight Vanilla TypeScript ES6+ helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper.git"
+    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x"
   },
   "keywords": [
     "javascript",
