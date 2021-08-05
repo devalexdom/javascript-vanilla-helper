@@ -2,6 +2,8 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var jsvanillahelperCore = require('jsvanillahelper-core');
+
 class IJSVanillaHelper_Extension { /* To solve temporarily JSVanillaHelper Core v2 TypeScript compatibility */
     constructor() { }
 }
@@ -9,7 +11,7 @@ class IJSVanillaHelper_Extension { /* To solve temporarily JSVanillaHelper Core 
 class AppArchitecture extends IJSVanillaHelper_Extension {
     constructor() {
         super();
-        this.version = 3.92;
+        this.version = 3.921;
         this.extensionName = 'appArchitecture';
         this.parameters = {};
         this.flags = {
@@ -699,7 +701,7 @@ class JSVendorLoader {
         if (!this.isVendorConflicted(vendor)) {
             if (!V$C(vendor.triggerClass).isZeroLength() || vendor.requested) {
                 const onLoadFunc = () => {
-                    const helper = V();
+                    const helper = jsvanillahelperCore.defaultHelperInstance;
                     if (helper.hData.flags.appVerboseInit) {
                         const loadMode = vendor.requested
                             ? ' [LOADED BY REQUEST]'
@@ -867,7 +869,7 @@ class AppComponentController extends JSVanillaScrollLazyLoadHelper {
     }
 
     verboseOnAppInitFeedback(initObjectNameStr = 'unknow', customInitMessage) {
-        const helper = V();
+        const helper = jsvanillahelperCore.defaultHelperInstance;
         if (helper.hData.flags.appVerboseInit) {
             if (customInitMessage) {
                 helper.console('log', customInitMessage.replace("%id%", initObjectNameStr));
@@ -879,7 +881,7 @@ class AppComponentController extends JSVanillaScrollLazyLoadHelper {
     }
 
     verboseCompletedFeedback() {
-        const helper = V();
+        const helper = jsvanillahelperCore.defaultHelperInstance;
         if (helper.hData.flags.appVerboseInit) {
             helper.console('log', ` ↳ completed after ${(new Date().getTime() - helper.hData.reg.appInitTime)} ms`);
         }
@@ -934,7 +936,7 @@ class OnViewportInstanceInit extends JSVanillaScrollLazyLoadHelper {
     }
 
     verboseCompletedFeedback() {
-        const helper = V();
+        const helper = jsvanillahelperCore.defaultHelperInstance;
         if (helper.hData.flags.appVerboseInit) {
             helper.console('log', ` ↳ completed after ${(new Date().getTime() - helper.hData.reg.appInitTime)} ms`);
         }
@@ -970,7 +972,7 @@ class OnViewportInstanceInit extends JSVanillaScrollLazyLoadHelper {
     }
 
     verboseAppInitFeedback(initObjectNameStr = 'unknow', lazyInit = false, partiallyInit = false) {
-        const helper = V();
+        const helper = jsvanillahelperCore.defaultHelperInstance;
         if (helper.hData.flags.appVerboseInit) {
             if (!partiallyInit) {
                 const lazyStr = (lazyInit) ? ' LAZY' : '';

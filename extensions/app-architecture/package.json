@@ -1,6 +1,6 @@
 {
   "name": "jsvanillahelper-ext-apparchitecture-legacy",
-  "version": "3.92.0",
+  "version": "3.92.1",
   "description": "Create a high performance, easy to develop and reliable component based vanilla javascript webapp",
   "main": "dist/index.js",
   "files": [
