@@ -5,7 +5,7 @@ var jsvanillahelperCore = require('jsvanillahelper-core');
 class HelperScope {
   constructor(globalBindAlias) {
     this.extensionName = 'helperScope';
-    this.version = 1.3;
+    this.version = 1.31;
     this.scopes = new Map();
     this["_"] = this.getSelector;
     this["$cope"] = this.selectScope;
@@ -43,7 +43,8 @@ class HelperScope {
     this.globalBindAlias = globalBindAlias;
     const hsInstance = this.handleGlobalHelperScopeInstance(globalBindAlias);
     const newBindsObj = newScope.binds.reduce((bindsObj, current) => {
-      return bindsObj[current] = null;
+      bindsObj[current] = current;
+      return bindsObj;
     }, {});
     hsInstance.scopes[newScope.alias] = {
       alias: newScope.alias,

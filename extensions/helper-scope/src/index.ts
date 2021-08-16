@@ -24,7 +24,7 @@ class HelperScope implements IJSVanillaHelper_Extension {
     flags: object;
     constructor(globalBindAlias?: string) {
         this.extensionName = 'helperScope';
-        this.version = 1.3;
+        this.version = 1.31;
         this.scopes = new Map<string, IHelperScopeBind>();
         this["_"] = this.getSelector;
         this["$cope"] = this.selectScope;
@@ -56,8 +56,9 @@ class HelperScope implements IJSVanillaHelper_Extension {
     declare(newScope: IHelperScopeDeclareBind, globalBindAlias?: string) {
         this.globalBindAlias = globalBindAlias;
         const hsInstance = this.handleGlobalHelperScopeInstance(globalBindAlias);
-        const newBindsObj = newScope.binds.reduce((bindsObj, current) => { //Transforms simple String[] to Object Key -> null value. Ex ["V", "$V"] to {"V": null, "$V": null}
-            return bindsObj[current] = null;
+        const newBindsObj = newScope.binds.reduce((bindsObj, current) => { //Transforms simple String[] to Object Key -> value. Ex ["V", "$V"] to {"V": "V", "$V": "$V"}
+            bindsObj[current] = current;
+            return bindsObj;
         }, {});
         hsInstance.scopes[newScope.alias] = { alias: newScope.alias, helperInstance: newScope.helperInstance, binds: newBindsObj, isBinded: false };
         hsInstance.handleExtensionParameters();
