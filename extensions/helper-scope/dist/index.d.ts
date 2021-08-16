@@ -5,6 +5,11 @@ interface IHelperScopeBind {
     helperInstance?: JSVanillaHelper;
     isBinded?: boolean;
 }
+interface IHelperScopeDeclareBind {
+    alias: string;
+    binds: string[];
+    helperInstance: JSVanillaHelper;
+}
 declare class HelperScope implements IJSVanillaHelper_Extension {
     scopeTarget: IHelperScopeBind;
     extensionName: string;
@@ -17,7 +22,7 @@ declare class HelperScope implements IJSVanillaHelper_Extension {
     onAddExtension(): void;
     handleHelperScopeGlobalBind(): void;
     handleExtensionParameters(): void;
-    declare(newScope: IHelperScopeBind, globalBindAlias?: string): any;
+    declare(newScope: IHelperScopeDeclareBind, globalBindAlias?: string): any;
     handleGlobalHelperScopeInstance(globalBindAlias: string): any;
     getHelperInstance(scopeAlias: string): any;
     getSelector(selectorMethod: string): any;
