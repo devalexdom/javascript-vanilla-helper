@@ -20,7 +20,7 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.061;
+    this.version = 2.07;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -59,14 +59,22 @@ class JSVanillaHelper {
     return t.value;
   }
 
-  firstChildren(query, t = this.t) {
+  child(query, t = this.t) {
     this.setTarget(t.querySelector(query));
     return this;
+  }
+
+  getChild(query, t = this.t) {
+    return t.querySelector(query);
   }
 
   children(query, t = this.t) {
     this.setTarget(t.querySelectorAll(query));
     return this;
+  }
+
+  getChildren(query, t = this.t) {
+    return t.querySelectorAll(query);
   }
 
   hasOverflow(queryChildrens = '', overflowCallback = el => {}, t = this.t) {

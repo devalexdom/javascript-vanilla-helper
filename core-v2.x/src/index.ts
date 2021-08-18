@@ -41,7 +41,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.061;
+    this.version = 2.07;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -78,14 +78,22 @@ export class JSVanillaHelper {
     return t.value;
   }
 
-  firstChildren(query: string, t: Element = this.t): JSVanillaHelper {
+  child(query: string, t: Element = this.t): JSVanillaHelper {
     this.setTarget(t.querySelector(query));
     return this;
+  }
+
+  getChild(query: string, t: Element = this.t): Element {
+    return t.querySelector(query);
   }
 
   children(query: string, t: Element = this.t): JSVanillaHelper {
     this.setTarget(t.querySelectorAll(query));
     return this;
+  }
+
+  getChildren(query: string, t: Element = this.t): NodeListOf<Element> {
+    return t.querySelectorAll(query);
   }
 
   hasOverflow(queryChildrens: string = '', overflowCallback = (el) => { }, t: HTMLElement = this.t): boolean {

@@ -36,8 +36,10 @@ export declare class JSVanillaHelper {
     toInt(t?: any): number;
     data(dataObjKey: string, t?: HTMLElement): this;
     val(setValue: string, t?: HTMLInputElement): string;
-    firstChildren(query: string, t?: Element): JSVanillaHelper;
+    child(query: string, t?: Element): JSVanillaHelper;
+    getChild(query: string, t?: Element): Element;
     children(query: string, t?: Element): JSVanillaHelper;
+    getChildren(query: string, t?: Element): NodeListOf<Element>;
     hasOverflow(queryChildrens?: string, overflowCallback?: (el: any) => void, t?: HTMLElement): boolean;
     findElementIn(parent: HTMLElement, t?: any): Element;
     alterFontSize(pixelsIn?: number, t?: any): void;
