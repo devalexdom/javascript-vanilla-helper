@@ -20,7 +20,7 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.07;
+    this.version = 2.083;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -49,6 +49,14 @@ class JSVanillaHelper {
 
     this.t = this.t.dataset[dataObjKey];
     return this;
+  }
+
+  _v() {
+    return Object.assign({}, this);
+  }
+
+  _() {
+    return new JSVanillaHelper(this.t, this.hData);
   }
 
   val(setValue, t = this.t) {
@@ -286,16 +294,32 @@ class JSVanillaHelper {
   }
 
   addHelperExtension(extension) {
+    const doneFeedbackFunction = () => {
+      return "callbackDone";
+    };
+
     const extensionName = extension.extensionName || extension.helperExtensionName;
 
     if (!this.hexts[extensionName]) {
       extension.helper = this;
       this.hexts[extensionName] = extension;
 
-      if (typeof this.hexts[extensionName].onAddExtension === "function") {
-        const bindedFunc = this.hexts[extensionName].onAddExtension.bind(extension);
-        bindedFunc();
+      if (typeof extension.onAddExtension === "function") {
+        extension.onAddExtension.bind(extension)();
+        extension.onAddExtension = doneFeedbackFunction;
       }
+
+      if (typeof extension.extendHelperInstance === "function") {
+        extension.extendHelperInstance.bind(extension)(this);
+        extension.extendHelperInstance = doneFeedbackFunction;
+      }
+
+      if (typeof extension.extendHelperPrototype === "function") {
+        extension.extendHelperPrototype.bind(extension)(JSVanillaHelper.prototype);
+        extension.extendHelperPrototype = doneFeedbackFunction;
+      }
+    } else {
+      console.error(`JSVanillaHelper Core: Extension alias "${extensionName}" already added`);
     }
 
     return this;

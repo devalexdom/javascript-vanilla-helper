@@ -15,6 +15,9 @@ export interface IJSVanillaHelper_Extension {
     parameters?: object;
     flags?: object;
     helper: JSVanillaHelper;
+    onAddExtension?: Function;
+    extendHelperInstance?: Function;
+    extendHelperPrototype?: Function;
 }
 declare enum JSVHBuildType {
     stable = 1,
@@ -35,6 +38,8 @@ export declare class JSVanillaHelper {
     setTarget(t?: any, tData?: object): this;
     toInt(t?: any): number;
     data(dataObjKey: string, t?: HTMLElement): this;
+    _v(): this;
+    _(): JSVanillaHelper;
     val(setValue: string, t?: HTMLInputElement): string;
     child(query: string, t?: Element): JSVanillaHelper;
     getChild(query: string, t?: Element): Element;
