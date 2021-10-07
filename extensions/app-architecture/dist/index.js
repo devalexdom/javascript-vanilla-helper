@@ -11,7 +11,7 @@ class IJSVanillaHelper_Extension { /* To solve temporarily JSVanillaHelper Core 
 class AppArchitecture extends IJSVanillaHelper_Extension {
     constructor() {
         super();
-        this.version = 3.921;
+        this.version = 3.937;
         this.extensionName = 'appArchitecture';
         this.parameters = {};
         this.flags = {
@@ -22,40 +22,41 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
 
     onAddExtension() {// this scope == extension
         this.handleExtensionParameters();
-        this.addMethodsToHelperPrototype();
     }
 
     handleExtensionParameters() {
         this.parameters = { ...this.parameters, ...{ eventThrottling: !(this.helper.detectBrowser() === 'firefox') } };
     }
 
-    addMethodsToHelperPrototype() {
-        this.helper.initializeApp = this.initializeApp.bind(this);
-        this.helper.initializeAppModule = this.initializeAppModule.bind(
+    extendHelperInstance(v) {
+        v["initializeApp"] = this.initializeApp.bind(this);
+        v["initializeAppModule"] = this.initializeAppModule.bind(
             this
         );
-        this.helper.addModularComponentController = this.addModularComponentController.bind(
+        v["addModularComponentController"] = this.addModularComponentController.bind(
             this
         );
-        this.helper.toggleLSDebugModeSetting = this.toggleLSDebugModeSetting.bind(this);
-        this.helper.isAppInVerbose = this.isAppInVerbose;
-        this.helper.reportFromComponent = this.reportFromComponent;
-        this.helper.getMainApp = this.getMainApp;
-        this.helper.getApp = this.getApp;
-        this.helper.getAppConfig = this.getAppConfig;
-        this.helper.getAppComponentRef = this.getAppComponent;
-        this.helper.getAppComponent = this.getAppComponent;
-        this.helper.getAppComponentAPI = this.getAppComponentAPI;
-        this.helper.getAPI = this.getAppComponentAPI;
-        this.helper.getThisAppModuleRef = this.getThisAppModuleRef;
-        this.helper.getAppModuleRef = this.getAppModule;
-        this.helper.getAppModule = this.getAppModule;
-        this.helper.getThisAppModuleConfigRef = this.getThisAppModuleConfigRef;
-        this.helper.getAppService = this.getAppService;
-        this.helper.useAppService = this.useAppService;
-        this.helper.verboseAppServiceUsage = this.verboseAppServiceUsage;
-        this.helper.getJsonDataParameterObj = this.getJsonDataParameterObj;
-        this.helper.onAppInitCompleted = this.onAppInitCompleted;
+        v["toggleLSDebugModeSetting"] = this.toggleLSDebugModeSetting.bind(this);
+        v["isAppInVerbose"] = this.isAppInVerbose;
+        v["reportFromComponent"] = this.reportFromComponent;
+        v["getMainApp"] = this.getMainApp;
+        v["getApp"] = this.getApp;
+        v["getAppConfig"] = this.getAppConfig;
+        v["getAppComponentRef"] = this.getAppComponent;
+        v["getAppComponent"] = this.getAppComponent;
+        v["getAppComponentAPI"] = this.getAppComponentAPI;
+        v["getServiceAPI"] = this.getAppServiceAPI;
+        v["getAPI"] = this.getAppComponentAPI;
+        v["getThisAppModuleRef"] = this.getThisAppModuleRef;
+        v["getAppModuleRef"] = this.getAppModule;
+        v["getAppModule"] = this.getAppModule;
+        v["getThisAppModuleConfigRef"] = this.getThisAppModuleConfigRef;
+        v["getAppService"] = this.getAppService;
+        v["useAppService"] = this.useAppService;
+        v["useAppServiceAPI"] = this.useAppServiceAPI;
+        v["verboseAppServiceUsage"] = this.verboseAppServiceUsage;
+        v["getJsonDataParameterObj"] = this.getJsonDataParameterObj;
+        v["onAppInitCompleted"] = this.onAppInitCompleted;
     }
 
     getAppConfig(configStr = '') {
@@ -104,6 +105,7 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
         return null;
     }
 
+    /* Deprecated */
     useAppService(serviceStr = '', serviceMethodStr = '', args = [], t = this.t) {
         const appServiceRef = this.getAppService(serviceStr);
         if (appServiceRef) {
@@ -113,6 +115,22 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
             return result;
         }
         console.error(`Service ${serviceStr} not found.`);
+        return null;
+    }
+
+    useAppServiceAPI(serviceStr = '', serviceMethodStr = '', args = [], t = this.t) {
+        const appServiceRef = this.getAppService(serviceStr);
+        if (appServiceRef && appServiceRef["api"]) {
+            const serviceApiMethod = appServiceRef.api[serviceMethodStr];
+            if (serviceApiMethod) {
+                this.verboseAppServiceUsage(serviceMethodStr, t, appServiceRef);
+                const result = serviceApiMethod.apply(appServiceRef, args);
+                this.verboseAppServiceUsage(serviceMethodStr, t, appServiceRef, true);
+                return result;
+            }
+            console.error(`Service ${serviceStr} API has no method "${serviceMethodStr}" implemented yet"`);
+        }
+        console.error(`Service ${serviceStr} API not found.`);
         return null;
     }
 
@@ -165,7 +183,7 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
         return this.N(componentStr, appComponentRef);
     }
 
-    getAppComponentAPI(componentStr = '') {
+    getAppComponentAPI(componentStr = '',) {
         const appComponentRef = this.getMainApp().appComponents;
         const componentRef = this.N(componentStr, appComponentRef);
         if (!componentRef) {
@@ -177,6 +195,22 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
         }
 
         console.error(`App component "${componentStr}" has no API`);
+        return {};
+
+    }
+
+    getAppServiceAPI(serviceStr = '',) {
+        const appServicesRef = this.getMainApp().appServices;
+        const serviceRef = this.N(serviceStr, appServicesRef);
+        if (!serviceRef) {
+            console.error(`Service "${serviceStr}" not found`);
+            return {};
+        }
+        if (serviceRef.api) {
+            return serviceRef.api;
+        }
+
+        console.error(`Service "${serviceStr}" has no API`);
         return {};
 
     }
@@ -363,45 +397,57 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
         }
     }
 
-    handleInlineInit(mainAppRef) {
-        const { helper } = this;
-        const inlineOnAppInit = document.querySelectorAll(
-            '[data-onapp-init-v-controller]'
+    reportInlineInitError(DOMComponent, error) {
+        const visibleErrorFeedback = (DOMComponent) => {
+            if (this.helper.hData.flags.appDebug) {
+                DOMComponent.style.opacity = 0.6;
+                DOMComponent.style.filter = 'grayscale(100%)';
+                DOMComponent.prepend('⚠️');
+            } else {
+                DOMComponent.style.pointerEvents = 'none';
+            }
+        };
+        this.helper.console(
+            'error',
+            `🤕 An unhandled error happened in the inline init of DOM instance component "${(DOMComponent.id) ? DOMComponent.id : "-NO ID-"}"`
         );
-        const inlineOnViewportInit = document.querySelectorAll(
-            '[data-onviewport-init-v-controller]'
+        this.helper.console('error', DOMComponent);
+        this.helper.console(
+            'error',
+            error || 'Controller not found in main app'
+        );
+        visibleErrorFeedback(DOMComponent);
+    };
+
+    handleInlineInit_v4(mainAppRef) {
+        const { helper } = this;
+        const domInstanceComponents = document.querySelectorAll(
+            '[jsvh-controller]'
         );
 
-        const reportInlineInitError = (DOMComponent, error) => {
-            const visibleErrorFeedback = (DOMComponent) => {
-                if (helper.hData.flags.appDebug) {
-                    DOMComponent.style.opacity = 0.6;
-                    DOMComponent.style.filter = 'grayscale(100%)';
-                    DOMComponent.prepend('⚠️');
-                } else {
-                    DOMComponent.style.pointerEvents = 'none';
-                }
-            };
-            this.helper.console(
-                'error',
-                `🤕 An unhandled error happened in the inline init of DOM instance component "${(DOMComponent.id) ? DOMComponent.id : "-NO ID-"}"`
-            );
-            this.helper.console('error', DOMComponent);
-            this.helper.console(
-                'error',
-                error || 'Controller not found in main app'
-            );
-            visibleErrorFeedback(DOMComponent);
+        const handleInitHook = (DOMComponent, controller) => {
+            switch (DOMComponent.getAttribute("jsvh-init-hook")) {
+                case "viewport-visible":
+                    controller.handleInlineOnViewportInit(DOMComponent);
+                    break;
+                case "app-ready":
+                    this.reportInlineInitError(DOMComponent, `app-ready init hook is only supported on App Architecture v4.x or higher`);
+                    break;
+
+                default:
+                    controller.handleInlineOnAppInit(DOMComponent);
+                    break;
+            }
         };
 
         helper.forEach((DOMComponent) => {
-            const controllerAlias = DOMComponent.dataset.onappInitVController;
-            const { modularComponentSrc } = DOMComponent.dataset;
+            const controllerAlias = DOMComponent.getAttribute("jsvh-controller");
+            const modularComponentSrc = DOMComponent.getAttribute("data-modular-component-src");
 
             try {
                 const controller = mainAppRef.appComponents[controllerAlias];
                 if (!controller && !modularComponentSrc) {
-                    reportInlineInitError(DOMComponent);
+                    this.reportInlineInitError(DOMComponent);
                     return;
                 }
                 if (!controller && modularComponentSrc) {
@@ -411,30 +457,37 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
                             const modularController =
                                 mainAppRef.appComponents[controllerAlias];
                             if (!modularController) {
-                                reportInlineInitError(DOMComponent);
+                                this.reportInlineInitError(DOMComponent);
                                 return;
                             }
-                            modularController.handleInlineOnAppInit(DOMComponent);
+                            handleInitHook(DOMComponent, modularController);
                         },
                         `${controllerAlias}-script`,
                         document.head
                     );
                 } else {
-                    controller.handleInlineOnAppInit(DOMComponent);
+                    handleInitHook(DOMComponent, controller);
                 }
             } catch (error) {
-                reportInlineInitError(DOMComponent, error);
+                this.reportInlineInitError(DOMComponent, error);
             }
-        }, inlineOnAppInit);
+        }, domInstanceComponents);
+    }
+
+    handleInlineInit(mainAppRef) {
+        const { helper } = this;
+        const domInstanceComponents = document.querySelectorAll(
+            '[data-onapp-init-v-controller], [data-onviewport-init-v-controller]'
+        );
 
         helper.forEach((DOMComponent) => {
-            const controllerAlias = DOMComponent.dataset.onviewportInitVController;
-            const { modularComponentSrc } = DOMComponent.dataset;
+            const controllerAlias = DOMComponent.getAttribute("data-onapp-init-v-controller") || DOMComponent.getAttribute("data-onviewport-init-v-controller");
+            const modularComponentSrc = DOMComponent.getAttribute("data-modular-component-src");
 
             try {
                 const controller = mainAppRef.appComponents[controllerAlias];
                 if (!controller && !modularComponentSrc) {
-                    reportInlineInitError(DOMComponent);
+                    this.reportInlineInitError(DOMComponent);
                     return;
                 }
                 if (!controller && modularComponentSrc) {
@@ -444,21 +497,31 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
                             const modularController =
                                 mainAppRef.appComponents[controllerAlias];
                             if (!modularController) {
-                                reportInlineInitError(DOMComponent);
+                                this.reportInlineInitError(DOMComponent);
                                 return;
                             }
-                            modularController.handleInlineOnViewportInit(DOMComponent);
+                            if (DOMComponent.getAttribute("data-onviewport-init-v-controller")) {
+                                modularController.handleInlineOnViewportInit(DOMComponent);
+                            }
+                            else {
+                                modularController.handleInlineOnAppInit(DOMComponent);
+                            }
                         },
                         `${controllerAlias}-script`,
                         document.head
                     );
                 } else {
-                    controller.handleInlineOnViewportInit(DOMComponent);
+                    if (DOMComponent.getAttribute("data-onviewport-init-v-controller")) {
+                        controller.handleInlineOnViewportInit(DOMComponent);
+                    }
+                    else {
+                        controller.handleInlineOnAppInit(DOMComponent);
+                    }
                 }
             } catch (error) {
-                reportInlineInitError(DOMComponent, error);
+                this.reportInlineInitError(DOMComponent, error);
             }
-        }, inlineOnViewportInit);
+        }, domInstanceComponents);
     }
 
     toggleLSDebugModeSetting() {
@@ -591,7 +654,7 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
         for (; i < modulesObjLength; i++) {
             initModuleAppComponents(modulesObjKeys[i]);
         }
-        this.handleInlineInit(t);
+        t.appConfig.earlyArchitectureV4Support ? this.handleInlineInit_v4(t) : this.handleInlineInit(t);
         this.init();
         this.handleAppReadyCallback(t);
         this.dispatchAppInitCompletedEvent();
@@ -644,8 +707,6 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
     }
 
     handleAppReadyCallback(mainAppRef) {
-        this.initializeAppServices(mainAppRef, true);
-
         const { appComponents } = mainAppRef;
         const appComponentsKeys = Object.keys(appComponents);
 
@@ -653,7 +714,7 @@ class AppArchitecture extends IJSVanillaHelper_Extension {
             if (typeof appComponents[appComponentKey].onAppReady === "function") {
                 appComponents[appComponentKey].onAppReady();
                 if (this.helper.hData.flags.appVerboseInit) {
-                    this.helper.console('log', `💎 COMPONENT: ${appComponentKey} [ON APP READY] after ${(new Date().getTime() - helper.hData.reg.appInitTime)} ms`);
+                    this.helper.console('log', `💎 COMPONENT: ${appComponentKey} [ON APP READY] after ${(new Date().getTime() - this.helper.hData.reg.appInitTime)} ms`);
                 }
             }
         });
@@ -819,7 +880,7 @@ class AppComponentController extends JSVanillaScrollLazyLoadHelper {
 
     handleInlineOnAppInit(domElement, customInitMessage = "") {
         const newInstance = this.handleNewInstance(domElement);
-        const { vendorDependency } = domElement.dataset;
+        const vendorDependency = domElement.getAttribute("jsvh-vendor-dependency") || domElement.dataset.vendorDependency;
         this.pHelper.componentName = domElement.id;
         const initializedInit = () => { console.error(`Component ${this.pHelper.componentName} already initialized`); };
         const instanceOnAppInitProcedure = () => {
@@ -907,7 +968,7 @@ class OnViewportInstanceInit extends JSVanillaScrollLazyLoadHelper {
     }
 
     initComponentInstance(lazy) {
-        const { vendorDependency } = this.pHelper.componentDOMEl.dataset;
+        const vendorDependency = this.pHelper.componentDOMEl.getAttribute("jsvh-vendor-dependency") || this.pHelper.componentDOMEl.dataset.vendorDependency;
         const initializedInit = () => { console.error(`Component ${this.pHelper.componentName} already initialized`); };
         if (vendorDependency) {
             if (!this.vendorLoader) {
