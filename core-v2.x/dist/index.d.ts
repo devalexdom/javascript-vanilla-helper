@@ -37,6 +37,7 @@ export declare class JSVanillaHelper {
     constructor(target?: any, targetData?: {}, helperData?: IJSVHData);
     setTarget(t?: any, tData?: object): this;
     toInt(t?: any): number;
+    toFloat(t?: any): number;
     data(dataObjKey: string, t?: HTMLElement): this;
     _v(): this;
     _(): JSVanillaHelper;
@@ -51,6 +52,7 @@ export declare class JSVanillaHelper {
     setMaxViewportScale(maximumScale?: string, initialScale?: string): JSVanillaHelper;
     preventNativeTouchGestures(prevent?: boolean, t?: any): void;
     getData(t?: any): object;
+    getArray(t?: any): Array<any>;
     capitalize(t?: any): string;
     hideIf(condition: boolean, displayValue?: string, t?: any): JSVanillaHelper;
     showIf(condition: boolean, displayValue?: string, t?: any): JSVanillaHelper;
@@ -82,9 +84,7 @@ export declare class JSVanillaHelper {
     reverseEach(iteration: Function, t?: any): JSVanillaHelper;
     eachOne(helperFunction?: string, args?: any[]): void;
     waitFor(timeInMs?: number, helperFunction?: string, args?: any[]): JSVanillaHelper;
-    waitThen(timeInMs: number, timeoutCallback: Function): object;
     objForEach(iteration: Function, t?: any): JSVanillaHelper;
-    toggleMaximize(t?: any): JSVanillaHelper;
     setAttr(attrName?: string, attrValue?: string, t?: any): JSVanillaHelper;
     setId(id?: string, t?: any): JSVanillaHelper;
     setClass(className?: string, t?: any): JSVanillaHelper;
@@ -136,7 +136,6 @@ export declare class JSVanillaHelper {
     isPlainObject(t?: any): boolean;
     getCookie(cName?: string): string;
     setCookie(cName: any, cValue: any, exDays: any): void;
-    basicImageLazyLoader(imagedataAttrName?: string, bgImagedataAttrName?: string, t?: any): void;
     noSourceConsole(logType?: string, t?: any): void;
     console(logType?: string, t?: any): void;
     getPageHeight(): number;
@@ -148,47 +147,6 @@ export declare class JSVanillaHelper {
         up: any;
         disableFlagMode?: boolean;
     }, t?: any): void;
-    getJSONObject(url: string, actions: any, parameters?: {
-        url: string;
-        dataToSend: any;
-        withCredentials: boolean;
-        requestMethod: string;
-        enableJson: {
-            onResponse: boolean;
-            onSend: boolean;
-            onError: boolean;
-        };
-    }): void;
-    postJSONObject(url: string, data: {}, actions: any, parameters?: {
-        url: string;
-        dataToSend: {};
-        withCredentials: boolean;
-        requestMethod: string;
-        enableJson: {
-            onResponse: boolean;
-            onSend: boolean;
-            onError: boolean;
-        };
-        requestContent: string;
-    }): void;
-    AJAX({ url, requestMethod, withCredentials, dataToSend, async, enableJson, requestContent, timeoutError, }: {
-        url?: string;
-        requestMethod?: string;
-        withCredentials?: boolean;
-        dataToSend?: any;
-        async?: boolean;
-        enableJson?: {
-            onResponse: boolean;
-            onSend: boolean;
-            onError: boolean;
-        };
-        requestContent?: string;
-        timeoutError?: number;
-    }, actions?: {
-        onSuccess: (callback: any) => void;
-        onError: (callback: any) => void;
-        onOtherStatus: (callback: any) => void;
-    }): void;
     initializeApp(setAsMainApp: boolean): void;
 }
 export declare const defaultHelperInstance: JSVanillaHelper;

@@ -1,7 +1,7 @@
 {
-  "name": "jsvanillahelper-core",
-  "version": "2.0.10",
-  "description": "Lightweight Vanilla TypeScript ES6+ helper with a touch of functional programming, targeted for lightweight client-side webapps.",
+  "name": "jsvanillahelper-ext-ajax",
+  "version": "0.0.1",
+  "description": "Ajax made easy",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -14,18 +14,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x"
+    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper.git"
   },
   "keywords": [
     "javascript",
     "vanilla",
     "helper",
-    "typescript",
+    "multiple",
     "jsvanillahelper",
     "webapp",
-    "lightweight",
+    "instances",
     "performance",
-    "framework"
+    "framework",
+    "extension",
+    "scope"
   ],
   "author": "Àlex Domínguez",
   "license": "MIT",
@@ -34,6 +36,7 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "dependencies": {
+    "jsvanillahelper-core": "^2.0.10",
     "rollup": "^2.55.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-terser": "^7.0.2",

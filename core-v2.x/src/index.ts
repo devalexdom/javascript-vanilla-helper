@@ -44,7 +44,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.083;
+    this.version = 2.10;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -63,6 +63,10 @@ export class JSVanillaHelper {
 
   toInt(t: any = this.t) {
     return parseInt(t);
+  }
+
+  toFloat(t: any = this.t) {
+    return parseFloat(t);
   }
 
   data(dataObjKey: string, t: HTMLElement = this.t) {
@@ -186,6 +190,10 @@ export class JSVanillaHelper {
 
   getData(t: any = this.t): object {
     return t.dataset;
+  }
+
+  getArray(t: any = this.t): Array<any> {
+    return Array.from(t);
   }
 
   capitalize(t: any = this.t): string {
@@ -411,33 +419,10 @@ export class JSVanillaHelper {
     return this;
   }
 
-  waitThen(timeInMs: number = 0, timeoutCallback: Function): object {
-    const newInstance = new JSVanillaHelper(this.t, this.tData);
-    const timeout = setTimeout(() => {
-      timeoutCallback(newInstance);
-    }, timeInMs);
-    const clear = () => {
-      clearTimeout(timeout);
-    };
-    return { helper: newInstance, clear, timeout };
-  }
-
   objForEach(iteration: Function, t: any = this.t): JSVanillaHelper {
     [].forEach.call(Object.keys(t), (value, index) =>
       iteration(t[value], value, index)
     );
-    return this;
-  }
-
-  toggleMaximize(t: any = this.t): JSVanillaHelper {
-    if (!t.classList.contains('vjs-helper-maximized')) {
-      t.style.height = `${window.innerHeight}px`;
-      t.style.width = `${window.innerWidth}px`;
-    } else {
-      t.style.height = '';
-      t.style.width = '';
-    }
-    this.toggleClass('vjs-helper-maximized', t);
     return this;
   }
 
@@ -794,22 +779,6 @@ export class JSVanillaHelper {
     document.cookie = `${cName}=${cValue}; ${expires};path=/`;
   }
 
-  basicImageLazyLoader(
-    imagedataAttrName = '[data-image-src]',
-    bgImagedataAttrName = '[data-bgimage-src]',
-    t: any = this.t
-  ) {
-    const imagesLazyLoad = t.querySelectorAll(imagedataAttrName);
-    const bgimagesLazyLoad = t.querySelectorAll(bgImagedataAttrName);
-
-    this.forEach((el) => {
-      el.src = el.dataset.imageSrc;
-    }, imagesLazyLoad);
-    this.forEach((el) => {
-      el.style.backgroundImage = `url("${el.dataset.bgimageSrc}")`;
-    }, bgimagesLazyLoad);
-  }
-
   noSourceConsole(logType = 'log', t: any = this.t) {
     setTimeout(console[logType].bind(console, t));
   }
@@ -885,162 +854,6 @@ export class JSVanillaHelper {
 
       lastScroll = currentScroll;
     });
-  }
-
-  getJSONObject(
-    url = '',
-    actions,
-    parameters = {
-      url: "",
-      dataToSend: null,
-      withCredentials: false,
-      requestMethod: 'GET',
-      enableJson: { onResponse: true, onSend: false, onError: true },
-    }
-  ) {
-    parameters.url = url;
-    this.AJAX(parameters, actions);
-  }
-
-  postJSONObject(
-    url = "",
-    data = {},
-    actions,
-    parameters = {
-      url: "",
-      dataToSend: {},
-      withCredentials: false,
-      requestMethod: 'POST',
-      enableJson: { onResponse: true, onSend: true, onError: true },
-      requestContent: 'json',
-    }
-  ) {
-    parameters.url = url;
-    parameters.dataToSend = data;
-    this.AJAX(parameters, actions);
-  }
-
-  AJAX(
-    {
-      url = '',
-      requestMethod = 'POST',
-      withCredentials = false,
-      dataToSend = null,
-      async = true,
-      enableJson = { onResponse: false, onSend: false, onError: false },
-      requestContent = 'text',
-      timeoutError = 10000,
-    },
-    actions = {
-      onSuccess: (callback) => { },
-      onError: (callback) => { },
-      onOtherStatus: (callback) => { },
-    }
-  ) {
-    const xhr = new XMLHttpRequest();
-    let errorThrown = false;
-    let fd = null;
-    let dataOutgoing = null;
-    let timeout = null;
-    if (timeoutError) {
-      timeout = setTimeout(() => {
-        ajaxHelperObj.xhrStatusCode = 408;
-        ajaxHelperObj.errorType = 'TIMEOUT';
-        ajaxHelperObj.errorDetails +=
-          `Response time exceeded ${timeoutError}ms` + '\n';
-        actions.onError(ajaxHelperObj);
-        errorThrown = true;
-      }, timeoutError);
-    }
-
-    const ajaxHelperObj = {
-      xhrStatusCode: null,
-      xhrResponseText: null,
-      errorType: null,
-      errorDetails: '',
-      response: null
-    };
-
-    const handleJson = (value, parse) => {
-      try {
-        return parse ? JSON.parse(value) : JSON.stringify(value);
-      } catch (e) {
-        ajaxHelperObj.errorType = 'JSON';
-        ajaxHelperObj.errorDetails += `${e}\n`;
-      }
-      actions.onError(ajaxHelperObj);
-      errorThrown = true;
-      return null;
-    };
-
-    const handleResponse = (enableJsonOption) => {
-      ajaxHelperObj.response = enableJsonOption
-        ? handleJson(ajaxHelperObj.xhrResponseText, true)
-        : ajaxHelperObj.xhrResponseText;
-    };
-
-    xhr.open(requestMethod, url, async);
-    if (requestMethod === 'POST') {
-      requestContent = enableJson.onSend ? 'json' : requestContent;
-      switch (requestContent) {
-        case 'json':
-          xhr.setRequestHeader(
-            'Content-Type',
-            'application/json; charset=UTF-8'
-          );
-          dataOutgoing = handleJson(dataToSend, false);
-          break;
-        case 'form':
-          fd = new FormData();
-          for (const name in dataToSend) {
-            fd.append(name, dataToSend[name]);
-          }
-          xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-          break;
-        case 'form-dom-el':
-          fd = new FormData(dataToSend);
-          xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-          break;
-        case 'form-urlencoded':
-          enableJson.onSend = false;
-          const formData = [];
-          for (const property in dataToSend) {
-            const encodedKey = encodeURIComponent(property);
-            const encodedValue = encodeURIComponent(dataToSend[property]);
-            formData.push(`${encodedKey}=${encodedValue}`);
-          }
-          dataOutgoing = formData.join('&');
-          xhr.setRequestHeader(
-            'Content-Type',
-            'application/x-www-form-urlencoded;charset=UTF-8'
-          );
-          break;
-        default:
-          xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
-          dataOutgoing = dataToSend;
-          break;
-      }
-    }
-    xhr.withCredentials = withCredentials;
-    xhr.onload = () => {
-      ajaxHelperObj.xhrResponseText = xhr.responseText;
-      ajaxHelperObj.xhrStatusCode = xhr.status;
-      clearTimeout(timeout);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        handleResponse(enableJson.onResponse);
-        actions.onSuccess(ajaxHelperObj);
-      } else if (xhr.status >= 400 && xhr.status < 600) {
-        handleResponse(enableJson.onError);
-        if (!errorThrown) actions.onError(ajaxHelperObj);
-      } else {
-        actions.onOtherStatus(ajaxHelperObj);
-      }
-    };
-    if (!fd) {
-      xhr.send(dataOutgoing);
-    } else {
-      xhr.send(fd);
-    }
   }
 
   initializeApp(setAsMainApp: boolean): void {
