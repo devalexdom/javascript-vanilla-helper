@@ -78,6 +78,7 @@ export declare class JSVanillaHelper {
     log(t?: any): JSVanillaHelper;
     addHelperExtension(extension: IJSVanillaHelper_Extension): JSVanillaHelper;
     removeHelperExtension(extensionName: string): JSVanillaHelper;
+    clearLocationHash(): JSVanillaHelper;
     getTextRenderedSize(font?: string, widthLimit?: number, t?: any): object;
     getFontUsed(property?: string, t?: any): string;
     getRenderedStyle(property?: string, t?: any): string;
@@ -118,11 +119,11 @@ export declare class JSVanillaHelper {
     sortArrayByProperty(property?: string, order?: number, t?: any): void;
     sortArray(order?: number, t?: any): void;
     sortNodeChildsByProperty(property?: string, order?: number, t?: any): void;
-    mutationObserver(actionCallback: any, { observeAttributes, observeMutationTypes, observeMultipleMutations, nativeObserverConfig }?: {
+    mutationObserver(actionCallback: any, { observeAttributes, observeMutationTypes, observeMultipleMutations, observerParameters }?: {
         observeAttributes?: string[];
         observeMutationTypes?: any[];
         observeMultipleMutations?: boolean;
-        nativeObserverConfig?: {
+        observerParameters?: {
             attributes: boolean;
         };
     }, t?: any): void;

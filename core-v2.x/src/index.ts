@@ -355,6 +355,12 @@ export class JSVanillaHelper {
     return this;
   }
 
+  clearLocationHash(): JSVanillaHelper {
+    history.pushState("", document.title, window.location.pathname
+      + window.location.search);
+    return this;
+  }
+
   getTextRenderedSize(font: string = '16px Arial', widthLimit: number = 0, t: any = this.t): object {
     // Max font-size will only work in px
     const changeFontSize = (newSize, contextFont) => {
@@ -628,7 +634,7 @@ export class JSVanillaHelper {
   }
 
   mutationObserver(actionCallback, { observeAttributes = ["class"], observeMutationTypes = [],
-    observeMultipleMutations = false, nativeObserverConfig = { attributes: true } } = {}, t: any = this.t) {
+    observeMultipleMutations = false, observerParameters = { attributes: true } } = {}, t: any = this.t) {
     const stopObserver = () => {
       observer.disconnect();
     };
@@ -643,7 +649,7 @@ export class JSVanillaHelper {
         }
       }
     });
-    observer.observe(t, nativeObserverConfig);
+    observer.observe(t, observerParameters);
   }
 
   resizeObserver(onResize, t: any = this.t) {
