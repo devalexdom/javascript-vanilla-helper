@@ -93,7 +93,9 @@ export declare class JSVanillaHelper {
     addBrowserClass(t?: any): void;
     detectBrowser(): string;
     nextQuerySign(t?: any): "?" | "&";
-    newEl(tag?: string): this;
+    newElement(t?: string): JSVanillaHelper;
+    appendChild(childElement: Element, t?: Element): JSVanillaHelper;
+    setHtml(innerHTML: string, t?: any): JSVanillaHelper;
     hasChildren(t?: any): boolean;
     firstOrDefault(arrayObj?: any): any;
     show(displayValue?: string, t?: any): this;
