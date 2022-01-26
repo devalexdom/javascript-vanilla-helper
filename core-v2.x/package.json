@@ -34,6 +34,8 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "dependencies": {
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.merge": "^4.6.2",
     "rollup": "^2.55.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-terser": "^7.0.2",
