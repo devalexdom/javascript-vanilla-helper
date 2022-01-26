@@ -2,6 +2,10 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+const lodashMerge = require('lodash.merge');
+
+const lodashCloneDeep = require('lodash.clonedeep');
+
 var JSVHBuildType;
 
 (function (JSVHBuildType) {
@@ -20,7 +24,7 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.10;
+    this.version = 2.133;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -117,6 +121,14 @@ class JSVanillaHelper {
   findElementIn(parent, t = this.t) {
     const descendants = Array.from(parent.querySelectorAll('*'));
     return descendants.find(el => el === t);
+  }
+
+  mergeObj(sources, t = this.t) {
+    return lodashMerge(lodashCloneDeep(t), sources);
+  }
+
+  clone(t = this.t) {
+    return lodashCloneDeep(t);
   }
 
   alterFontSize(pixelsIn = -2, t = this.t) {
@@ -338,6 +350,11 @@ class JSVanillaHelper {
     return this;
   }
 
+  clearLocationHash() {
+    history.pushState("", document.title, window.location.pathname + window.location.search);
+    return this;
+  }
+
   getTextRenderedSize(font = '16px Arial', widthLimit = 0, t = this.t) {
     // Max font-size will only work in px
     const changeFontSize = (newSize, contextFont) => {
@@ -481,8 +498,18 @@ class JSVanillaHelper {
     return t.includes('?') ? '&' : '?';
   }
 
-  newEl(tag = 'div') {
-    return this.setTarget(document.createElement(tag));
+  newElement(t = this.t) {
+    return this.setTarget(document.createElement(t));
+  }
+
+  appendChild(childElement, t = this.t) {
+    t.appendChild(childElement);
+    return this;
+  }
+
+  setHtml(innerHTML, t = this.t) {
+    t.innerHTML = innerHTML;
+    return this;
   }
 
   hasChildren(t = this.t) {
@@ -633,7 +660,7 @@ class JSVanillaHelper {
     observeAttributes = ["class"],
     observeMutationTypes = [],
     observeMultipleMutations = false,
-    nativeObserverConfig = {
+    observerParameters = {
       attributes: true
     }
   } = {}, t = this.t) {
@@ -653,7 +680,7 @@ class JSVanillaHelper {
         }
       }
     });
-    observer.observe(t, nativeObserverConfig);
+    observer.observe(t, observerParameters);
   }
 
   resizeObserver(onResize, t = this.t) {

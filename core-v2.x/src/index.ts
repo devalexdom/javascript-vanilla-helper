@@ -1,3 +1,6 @@
+const lodashMerge: Function = require('lodash.merge');
+const lodashCloneDeep: Function = require('lodash.clonedeep');
+
 interface IJSVHReg {
   workers: object;
   pNTouchGesturesHelperFunc: Function;
@@ -44,7 +47,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.10;
+    this.version = 2.133;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -136,6 +139,14 @@ export class JSVanillaHelper {
   findElementIn(parent: HTMLElement, t: any = this.t): Element {
     const descendants = Array.from(parent.querySelectorAll('*'));
     return descendants.find((el) => el === t);
+  }
+
+  mergeObj(sources: Array<Object>, t: Object = this.t) {
+    return lodashMerge(lodashCloneDeep(t), sources);
+  }
+
+  clone(t: Object = this.t) {
+    return lodashCloneDeep(t);
   }
 
   alterFontSize(pixelsIn: number = -2, t: any = this.t): void {
@@ -344,6 +355,12 @@ export class JSVanillaHelper {
     return this;
   }
 
+  clearLocationHash(): JSVanillaHelper {
+    history.pushState("", document.title, window.location.pathname
+      + window.location.search);
+    return this;
+  }
+
   getTextRenderedSize(font: string = '16px Arial', widthLimit: number = 0, t: any = this.t): object {
     // Max font-size will only work in px
     const changeFontSize = (newSize, contextFont) => {
@@ -472,8 +489,18 @@ export class JSVanillaHelper {
     return t.includes('?') ? '&' : '?';
   }
 
-  newEl(tag = 'div') {
-    return this.setTarget(document.createElement(tag));
+  newElement(t: string = this.t): JSVanillaHelper {
+    return this.setTarget(document.createElement(t));
+  }
+
+  appendChild(childElement: Element, t: Element = this.t): JSVanillaHelper {
+    t.appendChild(childElement);
+    return this;
+  }
+
+  setHtml(innerHTML: string, t = this.t): JSVanillaHelper {
+    t.innerHTML = innerHTML;
+    return this;
   }
 
   hasChildren(t: any = this.t) {
@@ -617,7 +644,7 @@ export class JSVanillaHelper {
   }
 
   mutationObserver(actionCallback, { observeAttributes = ["class"], observeMutationTypes = [],
-    observeMultipleMutations = false, nativeObserverConfig = { attributes: true } } = {}, t: any = this.t) {
+    observeMultipleMutations = false, observerParameters = { attributes: true } } = {}, t: any = this.t) {
     const stopObserver = () => {
       observer.disconnect();
     };
@@ -632,7 +659,7 @@ export class JSVanillaHelper {
         }
       }
     });
-    observer.observe(t, nativeObserverConfig);
+    observer.observe(t, observerParameters);
   }
 
   resizeObserver(onResize, t: any = this.t) {

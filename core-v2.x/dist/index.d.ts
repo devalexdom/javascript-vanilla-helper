@@ -48,6 +48,8 @@ export declare class JSVanillaHelper {
     getChildren(query: string, t?: Element): NodeListOf<Element>;
     hasOverflow(queryChildrens?: string, overflowCallback?: (el: any) => void, t?: HTMLElement): boolean;
     findElementIn(parent: HTMLElement, t?: any): Element;
+    mergeObj(sources: Array<Object>, t?: Object): any;
+    clone(t?: Object): any;
     alterFontSize(pixelsIn?: number, t?: any): void;
     setMaxViewportScale(maximumScale?: string, initialScale?: string): JSVanillaHelper;
     preventNativeTouchGestures(prevent?: boolean, t?: any): void;
@@ -76,6 +78,7 @@ export declare class JSVanillaHelper {
     log(t?: any): JSVanillaHelper;
     addHelperExtension(extension: IJSVanillaHelper_Extension): JSVanillaHelper;
     removeHelperExtension(extensionName: string): JSVanillaHelper;
+    clearLocationHash(): JSVanillaHelper;
     getTextRenderedSize(font?: string, widthLimit?: number, t?: any): object;
     getFontUsed(property?: string, t?: any): string;
     getRenderedStyle(property?: string, t?: any): string;
@@ -91,7 +94,9 @@ export declare class JSVanillaHelper {
     addBrowserClass(t?: any): void;
     detectBrowser(): string;
     nextQuerySign(t?: any): "?" | "&";
-    newEl(tag?: string): this;
+    newElement(t?: string): JSVanillaHelper;
+    appendChild(childElement: Element, t?: Element): JSVanillaHelper;
+    setHtml(innerHTML: string, t?: any): JSVanillaHelper;
     hasChildren(t?: any): boolean;
     firstOrDefault(arrayObj?: any): any;
     show(displayValue?: string, t?: any): this;
@@ -116,11 +121,11 @@ export declare class JSVanillaHelper {
     sortArrayByProperty(property?: string, order?: number, t?: any): void;
     sortArray(order?: number, t?: any): void;
     sortNodeChildsByProperty(property?: string, order?: number, t?: any): void;
-    mutationObserver(actionCallback: any, { observeAttributes, observeMutationTypes, observeMultipleMutations, nativeObserverConfig }?: {
+    mutationObserver(actionCallback: any, { observeAttributes, observeMutationTypes, observeMultipleMutations, observerParameters }?: {
         observeAttributes?: string[];
         observeMutationTypes?: any[];
         observeMultipleMutations?: boolean;
-        nativeObserverConfig?: {
+        observerParameters?: {
             attributes: boolean;
         };
     }, t?: any): void;
