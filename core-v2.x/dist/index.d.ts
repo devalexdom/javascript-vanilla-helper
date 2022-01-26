@@ -48,6 +48,8 @@ export declare class JSVanillaHelper {
     getChildren(query: string, t?: Element): NodeListOf<Element>;
     hasOverflow(queryChildrens?: string, overflowCallback?: (el: any) => void, t?: HTMLElement): boolean;
     findElementIn(parent: HTMLElement, t?: any): Element;
+    mergeObj(sources: Array<Object>, t?: Object): any;
+    clone(t?: Object): any;
     alterFontSize(pixelsIn?: number, t?: any): void;
     setMaxViewportScale(maximumScale?: string, initialScale?: string): JSVanillaHelper;
     preventNativeTouchGestures(prevent?: boolean, t?: any): void;

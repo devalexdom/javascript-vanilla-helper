@@ -1,3 +1,6 @@
+const lodashMerge: Function = require('lodash.merge');
+const lodashCloneDeep: Function = require('lodash.clonedeep');
+
 interface IJSVHReg {
   workers: object;
   pNTouchGesturesHelperFunc: Function;
@@ -136,6 +139,14 @@ export class JSVanillaHelper {
   findElementIn(parent: HTMLElement, t: any = this.t): Element {
     const descendants = Array.from(parent.querySelectorAll('*'));
     return descendants.find((el) => el === t);
+  }
+
+  mergeObj(sources: Array<Object>, t: Object = this.t) {
+    return lodashMerge(lodashCloneDeep(t), sources);
+  }
+
+  clone(t: Object = this.t) {
+    return lodashCloneDeep(t);
   }
 
   alterFontSize(pixelsIn: number = -2, t: any = this.t): void {
