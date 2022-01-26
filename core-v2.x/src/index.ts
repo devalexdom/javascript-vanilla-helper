@@ -483,8 +483,18 @@ export class JSVanillaHelper {
     return t.includes('?') ? '&' : '?';
   }
 
-  newEl(tag = 'div') {
-    return this.setTarget(document.createElement(tag));
+  newElement(t: string = this.t): JSVanillaHelper {
+    return this.setTarget(document.createElement(t));
+  }
+
+  appendChild(childElement: Element, t: Element = this.t): JSVanillaHelper {
+    t.appendChild(childElement);
+    return this;
+  }
+
+  setHtml(innerHTML: string, t = this.t): JSVanillaHelper {
+    t.innerHTML = innerHTML;
+    return this;
   }
 
   hasChildren(t: any = this.t) {
