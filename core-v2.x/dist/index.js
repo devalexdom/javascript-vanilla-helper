@@ -24,7 +24,7 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.133;
+    this.version = 2.134;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -827,6 +827,50 @@ class JSVanillaHelper {
     } = document;
     const html = document.documentElement;
     return Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+  }
+
+  setSearchParameters(parameters = [], t = this.t = window) {
+    const url = new URL(t.location.href);
+    parameters.forEach(parameter => {
+      url.searchParams.set(parameter["name"], parameter["value"]);
+    });
+    const newUrl = url.toString();
+    this.historyPushState(newUrl, null, "", t);
+    return this;
+  }
+
+  setSearchParameter(name, value, t = this.t = window) {
+    this.setSearchParameters([{
+      name,
+      value
+    }], t);
+  }
+
+  removeSearchParameters(parameters = [], t = this.t = window) {
+    const url = new URL(t.location.href);
+    parameters.forEach(parameter => {
+      url.searchParams.delete(parameter["name"]);
+    });
+    const newUrl = url.toString();
+    this.historyPushState(newUrl, null, "", t);
+    return this;
+  }
+
+  removeSearchParameter(name, t = this.t = window) {
+    this.removeSearchParameters([{
+      name
+    }], t);
+  }
+
+  historyPushState(url, state = null, title = "", t = this.t = window) {
+    const stateToPush = state ? state : {
+      path: url
+    };
+    t.history.pushState(stateToPush, title, url);
+    const popStateEvent = new PopStateEvent('popstate', {
+      state: stateToPush
+    });
+    t.dispatchEvent(popStateEvent);
   }
 
   makeInmutable(t = this.t) {

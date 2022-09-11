@@ -144,6 +144,11 @@ export declare class JSVanillaHelper {
     noSourceConsole(logType?: string, t?: any): void;
     console(logType?: string, t?: any): void;
     getPageHeight(): number;
+    setSearchParameters(parameters?: Array<Object>, t?: any): this;
+    setSearchParameter(name: string, value: string, t?: any): void;
+    removeSearchParameters(parameters?: Array<Object>, t?: any): this;
+    removeSearchParameter(name: string, t?: any): void;
+    historyPushState(url: string | URL, state?: any, title?: string, t?: any): void;
     makeInmutable(t?: any): any;
     onScroll({ offsetTop, top: topCallback, down: downCallback, up: upCallback, disableFlagMode, }: {
         offsetTop?: number;

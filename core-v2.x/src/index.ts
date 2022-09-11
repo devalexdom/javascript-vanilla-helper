@@ -47,7 +47,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.133;
+    this.version = 2.134;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -825,6 +825,43 @@ export class JSVanillaHelper {
       html.scrollHeight,
       html.offsetHeight
     );
+  }
+
+  setSearchParameters(parameters: Array<Object> = [], t: any = this.t = window) {
+    const url = new URL(t.location.href);
+    parameters.forEach(parameter => {
+      url.searchParams.set(parameter["name"], parameter["value"]);
+    });
+    const newUrl = url.toString();
+
+    this.historyPushState(newUrl, null, "", t);
+    return this;
+  }
+
+  setSearchParameter(name: string, value: string, t: any = this.t = window) {
+    this.setSearchParameters([{ name, value }], t);
+  }
+
+  removeSearchParameters(parameters: Array<Object> = [], t: any = this.t = window) {
+    const url = new URL(t.location.href);
+    parameters.forEach(parameter => {
+      url.searchParams.delete(parameter["name"]);
+    });
+    const newUrl = url.toString();
+
+    this.historyPushState(newUrl, null, "", t);
+    return this;
+  }
+
+  removeSearchParameter(name: string, t: any = this.t = window) {
+    this.removeSearchParameters([{ name }], t);
+  }
+
+  historyPushState(url: string | URL, state: any = null, title: string = "", t: any = this.t = window) {
+    const stateToPush = state ? state : { path: url };
+    t.history.pushState(stateToPush, title, url);
+    const popStateEvent = new PopStateEvent('popstate', { state: stateToPush });
+    t.dispatchEvent(popStateEvent);
   }
 
   makeInmutable(t: any = this.t) {
