@@ -31,6 +31,11 @@ enum JSVHBuildType {
   nightly
 }
 
+type SearchParameter = {
+  name: string;
+  value?: string;
+}
+
 
 export class JSVanillaHelper {
   version: number;
@@ -47,7 +52,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.134;
+    this.version = 2.22;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -275,7 +280,7 @@ export class JSVanillaHelper {
     return this.isZeroLength(Object.keys(t));
   }
 
-  onEvent(eventName: string, actionCallback: Function, t: any = this.t): object {
+  onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t: any = this.t): object {
     const removeListener = () => {
       t.removeEventListener(eventName, callback, false);
     };
@@ -286,7 +291,7 @@ export class JSVanillaHelper {
     return { helper: this, removeListener };
   }
 
-  onEvents(eventName: Array<string>, actionCallback, t: any = this.t): JSVanillaHelper {
+  onEvents(eventName: Array<string>, actionCallback: (event: Event, removeListener: () => void) => void, t: any = this.t): JSVanillaHelper {
     const removeListener = () => {
       this.forEach((eventName) => {
         t.removeEventListener(eventName, callback, false);
@@ -305,7 +310,7 @@ export class JSVanillaHelper {
     newScope(new JSVanillaHelper(this.t, this.tData));
   }
 
-  get(index: number): any {
+  get(index?: number): any {
     return index || index === 0 ? this.t[index] : this.t;
   }
 
@@ -546,7 +551,7 @@ export class JSVanillaHelper {
     t.appendChild(meta);
   }
 
-  addScriptFile(src = '', onload = () => { }, id = '', t: any = this.t) {
+  addScriptFile(src = '', onload = (e?: Event) => { }, id = '', t: any = this.t) {
     const scriptEl = document.createElement('script');
     scriptEl.src = src;
     scriptEl.id = id;
@@ -700,6 +705,36 @@ export class JSVanillaHelper {
     }
   }
 
+  setLSWithExpiry(value: any, expiryDate: Date, readOnce = false, key = this.t) {
+    const item = {
+      value: value,
+      expiry: expiryDate.getTime(),
+      readOnce
+    }
+    localStorage.setItem(key, JSON.stringify(item))
+  }
+
+  getLSWithExpiry(key = this.t) {
+    const itemStr = localStorage.getItem(key);
+
+    if (!itemStr) {
+      return null;
+    }
+    const item = JSON.parse(itemStr);
+    const now = new Date();
+
+    if (item.expiry && now.getTime() > item.expiry) {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    if (item.readOnce) {
+      localStorage.removeItem(key);
+    }
+
+    return item.value;
+  }
+
   hasAttribute(AttributeName = '', t: any = this.t) {
     return !(t.getAttribute(AttributeName) == null);
   }
@@ -827,41 +862,45 @@ export class JSVanillaHelper {
     );
   }
 
-  setSearchParameters(parameters: Array<Object> = [], t: any = this.t = window) {
-    const url = new URL(t.location.href);
+  setSearchParameters(parameters: Array<SearchParameter> = [], autoHistoryPushState: boolean = true, t: string | Window = this.t = window): string {
+    const targetIsWindow = t === window;
+    const url = new URL(targetIsWindow ? t["location"]["href"] : t as string);
     parameters.forEach(parameter => {
       url.searchParams.set(parameter["name"], parameter["value"]);
     });
-    const newUrl = url.toString();
-
-    this.historyPushState(newUrl, null, "", t);
-    return this;
+    const urlStr = url.toString();
+    if (targetIsWindow && autoHistoryPushState) {
+      this.historyPushState(urlStr, null, "");
+    }
+    return urlStr;
   }
 
-  setSearchParameter(name: string, value: string, t: any = this.t = window) {
-    this.setSearchParameters([{ name, value }], t);
+  setSearchParameter(name: string, value: string, autoHistoryPushState: boolean = true, t: string | Window = this.t = window) {
+    return this.setSearchParameters([{ name, value }], autoHistoryPushState, t);
   }
 
-  removeSearchParameters(parameters: Array<Object> = [], t: any = this.t = window) {
-    const url = new URL(t.location.href);
+  removeSearchParameters(parameters: Array<SearchParameter> = [], autoHistoryPushState: boolean = true, t: string | Window = this.t = window): string {
+    const targetIsWindow = t === window;
+    const url = new URL(targetIsWindow ? t["location"]["href"] : t as string);
     parameters.forEach(parameter => {
       url.searchParams.delete(parameter["name"]);
     });
-    const newUrl = url.toString();
-
-    this.historyPushState(newUrl, null, "", t);
-    return this;
+    const urlStr = url.toString();
+    if (targetIsWindow && autoHistoryPushState) {
+      this.historyPushState(urlStr, null, "");
+    }
+    return urlStr;
   }
 
-  removeSearchParameter(name: string, t: any = this.t = window) {
-    this.removeSearchParameters([{ name }], t);
+  removeSearchParameter(name: string, autoHistoryPushState: boolean = true, t: string | Window = this.t = window) {
+    return this.removeSearchParameters([{ name }], autoHistoryPushState, t);
   }
 
-  historyPushState(url: string | URL, state: any = null, title: string = "", t: any = this.t = window) {
+  historyPushState(url: string, state: any = null, title: string = "") {
     const stateToPush = state ? state : { path: url };
-    t.history.pushState(stateToPush, title, url);
+    window.history.pushState(stateToPush, title, url);
     const popStateEvent = new PopStateEvent('popstate', { state: stateToPush });
-    t.dispatchEvent(popStateEvent);
+    window.dispatchEvent(popStateEvent);
   }
 
   makeInmutable(t: any = this.t) {

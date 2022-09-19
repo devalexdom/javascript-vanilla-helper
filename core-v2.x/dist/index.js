@@ -24,7 +24,7 @@ class JSVanillaHelper {
     },
     flags: {}
   }) {
-    this.version = 2.134;
+    this.version = 2.22;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -556,7 +556,7 @@ class JSVanillaHelper {
     t.appendChild(meta);
   }
 
-  addScriptFile(src = '', onload = () => {}, id = '', t = this.t) {
+  addScriptFile(src = '', onload = e => {}, id = '', t = this.t) {
     const scriptEl = document.createElement('script');
     scriptEl.src = src;
     scriptEl.id = id;
@@ -718,6 +718,37 @@ class JSVanillaHelper {
     }
   }
 
+  setLSWithExpiry(value, expiryDate, readOnce = false, key = this.t) {
+    const item = {
+      value: value,
+      expiry: expiryDate.getTime(),
+      readOnce
+    };
+    localStorage.setItem(key, JSON.stringify(item));
+  }
+
+  getLSWithExpiry(key = this.t) {
+    const itemStr = localStorage.getItem(key);
+
+    if (!itemStr) {
+      return null;
+    }
+
+    const item = JSON.parse(itemStr);
+    const now = new Date();
+
+    if (item.expiry && now.getTime() > item.expiry) {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    if (item.readOnce) {
+      localStorage.removeItem(key);
+    }
+
+    return item.value;
+  }
+
   hasAttribute(AttributeName = '', t = this.t) {
     return !(t.getAttribute(AttributeName) == null);
   }
@@ -829,48 +860,58 @@ class JSVanillaHelper {
     return Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
   }
 
-  setSearchParameters(parameters = [], t = this.t = window) {
-    const url = new URL(t.location.href);
+  setSearchParameters(parameters = [], autoHistoryPushState = true, t = this.t = window) {
+    const targetIsWindow = t === window;
+    const url = new URL(targetIsWindow ? t["location"]["href"] : t);
     parameters.forEach(parameter => {
       url.searchParams.set(parameter["name"], parameter["value"]);
     });
-    const newUrl = url.toString();
-    this.historyPushState(newUrl, null, "", t);
-    return this;
+    const urlStr = url.toString();
+
+    if (targetIsWindow && autoHistoryPushState) {
+      this.historyPushState(urlStr, null, "");
+    }
+
+    return urlStr;
   }
 
-  setSearchParameter(name, value, t = this.t = window) {
-    this.setSearchParameters([{
+  setSearchParameter(name, value, autoHistoryPushState = true, t = this.t = window) {
+    return this.setSearchParameters([{
       name,
       value
-    }], t);
+    }], autoHistoryPushState, t);
   }
 
-  removeSearchParameters(parameters = [], t = this.t = window) {
-    const url = new URL(t.location.href);
+  removeSearchParameters(parameters = [], autoHistoryPushState = true, t = this.t = window) {
+    const targetIsWindow = t === window;
+    const url = new URL(targetIsWindow ? t["location"]["href"] : t);
     parameters.forEach(parameter => {
       url.searchParams.delete(parameter["name"]);
     });
-    const newUrl = url.toString();
-    this.historyPushState(newUrl, null, "", t);
-    return this;
+    const urlStr = url.toString();
+
+    if (targetIsWindow && autoHistoryPushState) {
+      this.historyPushState(urlStr, null, "");
+    }
+
+    return urlStr;
   }
 
-  removeSearchParameter(name, t = this.t = window) {
-    this.removeSearchParameters([{
+  removeSearchParameter(name, autoHistoryPushState = true, t = this.t = window) {
+    return this.removeSearchParameters([{
       name
-    }], t);
+    }], autoHistoryPushState, t);
   }
 
-  historyPushState(url, state = null, title = "", t = this.t = window) {
+  historyPushState(url, state = null, title = "") {
     const stateToPush = state ? state : {
       path: url
     };
-    t.history.pushState(stateToPush, title, url);
+    window.history.pushState(stateToPush, title, url);
     const popStateEvent = new PopStateEvent('popstate', {
       state: stateToPush
     });
-    t.dispatchEvent(popStateEvent);
+    window.dispatchEvent(popStateEvent);
   }
 
   makeInmutable(t = this.t) {

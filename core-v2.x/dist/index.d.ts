@@ -24,6 +24,10 @@ declare enum JSVHBuildType {
     beta = 2,
     nightly = 3
 }
+declare type SearchParameter = {
+    name: string;
+    value?: string;
+};
 export declare class JSVanillaHelper {
     version: number;
     about: string;
@@ -70,10 +74,10 @@ export declare class JSVanillaHelper {
     isDateObj(t?: Date): boolean;
     isZeroLength(t?: any): boolean;
     isEmpty(t?: any): boolean;
-    onEvent(eventName: string, actionCallback: Function, t?: any): object;
-    onEvents(eventName: Array<string>, actionCallback: any, t?: any): JSVanillaHelper;
+    onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): object;
+    onEvents(eventName: Array<string>, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): JSVanillaHelper;
     $$(newScope: Function): void;
-    get(index: number): any;
+    get(index?: number): any;
     sel(index: number): JSVanillaHelper;
     log(t?: any): JSVanillaHelper;
     addHelperExtension(extension: IJSVanillaHelper_Extension): JSVanillaHelper;
@@ -105,7 +109,7 @@ export declare class JSVanillaHelper {
     addClass(className: any, t?: any): this;
     addClasses(classNames?: any[], t?: any): this;
     addMeta(name?: string, content?: string, t?: any): void;
-    addScriptFile(src?: string, onload?: () => void, id?: string, t?: any): void;
+    addScriptFile(src?: string, onload?: (e?: Event) => void, id?: string, t?: any): void;
     addStyleInline(css?: string, t?: any): void;
     isScriptLoaded(src?: string): boolean;
     delayFunc(): (callback: any, ms: any) => void;
@@ -130,6 +134,8 @@ export declare class JSVanillaHelper {
         };
     }, t?: any): void;
     resizeObserver(onResize: any, t?: any): void;
+    setLSWithExpiry(value: any, expiryDate: Date, readOnce?: boolean, key?: any): void;
+    getLSWithExpiry(key?: any): any;
     hasAttribute(AttributeName?: string, t?: any): boolean;
     isVisible(verticalOffset?: number, t?: any): any;
     isRendered(verticalOffset?: number, t?: any): any;
@@ -144,11 +150,11 @@ export declare class JSVanillaHelper {
     noSourceConsole(logType?: string, t?: any): void;
     console(logType?: string, t?: any): void;
     getPageHeight(): number;
-    setSearchParameters(parameters?: Array<Object>, t?: any): this;
-    setSearchParameter(name: string, value: string, t?: any): void;
-    removeSearchParameters(parameters?: Array<Object>, t?: any): this;
-    removeSearchParameter(name: string, t?: any): void;
-    historyPushState(url: string | URL, state?: any, title?: string, t?: any): void;
+    setSearchParameters(parameters?: Array<SearchParameter>, autoHistoryPushState?: boolean, t?: string | Window): string;
+    setSearchParameter(name: string, value: string, autoHistoryPushState?: boolean, t?: string | Window): string;
+    removeSearchParameters(parameters?: Array<SearchParameter>, autoHistoryPushState?: boolean, t?: string | Window): string;
+    removeSearchParameter(name: string, autoHistoryPushState?: boolean, t?: string | Window): string;
+    historyPushState(url: string, state?: any, title?: string): void;
     makeInmutable(t?: any): any;
     onScroll({ offsetTop, top: topCallback, down: downCallback, up: upCallback, disableFlagMode, }: {
         offsetTop?: number;
