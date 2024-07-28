@@ -24,7 +24,7 @@ declare enum JSVHBuildType {
     beta = 2,
     nightly = 3
 }
-declare type SearchParameter = {
+type SearchParameter = {
     name: string;
     value?: string;
 };
@@ -40,6 +40,7 @@ export declare class JSVanillaHelper {
     buildType: JSVHBuildType;
     constructor(target?: any, targetData?: {}, helperData?: IJSVHData);
     setTarget(t?: any, tData?: object): this;
+    dynamicallyExtendThisHelper(extendCallback: (addMethodToHelper: (name: string, notLambdaFunction: Function) => void) => void): void;
     toInt(t?: any): number;
     toFloat(t?: any): number;
     data(dataObjKey: string, t?: HTMLElement): this;
@@ -52,8 +53,6 @@ export declare class JSVanillaHelper {
     getChildren(query: string, t?: Element): NodeListOf<Element>;
     hasOverflow(queryChildrens?: string, overflowCallback?: (el: any) => void, t?: HTMLElement): boolean;
     findElementIn(parent: HTMLElement, t?: any): Element;
-    mergeObj(sources: Array<Object>, t?: Object): any;
-    clone(t?: Object): any;
     alterFontSize(pixelsIn?: number, t?: any): void;
     setMaxViewportScale(maximumScale?: string, initialScale?: string): JSVanillaHelper;
     preventNativeTouchGestures(prevent?: boolean, t?: any): void;
@@ -134,6 +133,16 @@ export declare class JSVanillaHelper {
         };
     }, t?: any): void;
     resizeObserver(onResize: any, t?: any): void;
+    onViewportVisibleOnce(isVisibleCallback?: (element: HTMLElement) => void, options?: {
+        root: any;
+        rootMargin: string;
+        threshold: number;
+    }, t?: HTMLElement | Array<HTMLElement>): void;
+    traceViewportVisibility(isVisibleCallback?: (element: HTMLElement) => void, isHiddenCallback?: (element: HTMLElement) => void, options?: {
+        root: any;
+        rootMargin: string;
+        threshold: number;
+    }, t?: HTMLElement | Array<HTMLElement>): void;
     setLSWithExpiry(value: any, expiryDate: Date, readOnce?: boolean, key?: any): void;
     getLSWithExpiry(key?: any): any;
     hasAttribute(AttributeName?: string, t?: any): boolean;

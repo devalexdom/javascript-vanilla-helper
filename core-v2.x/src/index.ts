@@ -1,6 +1,3 @@
-const lodashMerge: Function = require('lodash.merge');
-const lodashCloneDeep: Function = require('lodash.clonedeep');
-
 interface IJSVHReg {
   workers: object;
   pNTouchGesturesHelperFunc: Function;
@@ -52,7 +49,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.22;
+    this.version = 2.3;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -67,6 +64,14 @@ export class JSVanillaHelper {
     this.t = t;
     this.tData = tData;
     return this;
+  }
+
+  dynamicallyExtendThisHelper(extendCallback: (addMethodToHelper: (name: string, notLambdaFunction: Function) => void) => void) {
+    const addMethodToHelper = (name: string, notLambdaFunction: Function) => {
+      if (this[name]) return;
+      this[name] = notLambdaFunction.bind(this);
+    }
+    extendCallback(addMethodToHelper);
   }
 
   toInt(t: any = this.t) {
@@ -144,14 +149,6 @@ export class JSVanillaHelper {
   findElementIn(parent: HTMLElement, t: any = this.t): Element {
     const descendants = Array.from(parent.querySelectorAll('*'));
     return descendants.find((el) => el === t);
-  }
-
-  mergeObj(sources: Array<Object>, t: Object = this.t) {
-    return lodashMerge(lodashCloneDeep(t), sources);
-  }
-
-  clone(t: Object = this.t) {
-    return lodashCloneDeep(t);
   }
 
   alterFontSize(pixelsIn: number = -2, t: any = this.t): void {
@@ -702,6 +699,49 @@ export class JSVanillaHelper {
           onResize(this);
         }
       });
+    }
+  }
+
+  onViewportVisibleOnce(isVisibleCallback = (element: HTMLElement) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
+    const observer = new IntersectionObserver(function (entries, self) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          isVisibleCallback(entry.target as HTMLElement);
+          self.unobserve(entry.target)//observer passed as self
+        }
+      });
+    }, options);
+
+    if (Array.isArray(t) || NodeList.prototype.isPrototypeOf(t)) {
+      [...<[]>t].forEach(element => { observer.observe(element); });
+    }
+    else if (t) {
+      observer.observe(t);
+    }
+  }
+
+  traceViewportVisibility(isVisibleCallback = (element: HTMLElement) => { }, isHiddenCallback = (element: HTMLElement) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
+    const observer = new IntersectionObserver(function (entries, self) {
+      entries.forEach(entry => {
+        const isIntersecting = entry.isIntersecting;
+        const wasIntersecting = !!entry.target["jsvh_isIntersecting"];
+
+        if (isIntersecting && !wasIntersecting) {
+          entry.target["jsvh_isIntersecting"] = true;
+          isVisibleCallback(entry.target as HTMLElement);
+        }
+        else if (!isIntersecting && wasIntersecting) {
+          entry.target["jsvh_isIntersecting"] = false;
+          isHiddenCallback(entry.target as HTMLElement);
+        }
+      });
+    }, options);
+
+    if (Array.isArray(t) || NodeList.prototype.isPrototypeOf(t)) {
+      [...<[]>t].forEach(element => { observer.observe(element); });
+    }
+    else if (t) {
+      observer.observe(t);
     }
   }
 

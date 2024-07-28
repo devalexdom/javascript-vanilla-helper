@@ -5,8 +5,8 @@
     "declaration": true, // generates declaration files
     "esModuleInterop": true,
     "noImplicitAny": false,
-    "module": "es6",
-    "target": "es2017",
+    "module": "es2022",
+    "target": "es2022",
     "moduleResolution": "node",
     "declarationDir": "dist",
   }
