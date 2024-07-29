@@ -1,0 +1,13 @@
+{
+  "include": ["./src/**/*"],
+  "compilerOptions": {
+    "strict": false,
+    "declaration": true, // generates declaration files
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "module": "es2022",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "declarationDir": "dist",
+  }
+}
