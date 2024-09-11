@@ -15,8 +15,11 @@ export interface Architecture4AppConfig {
     vendors: Array<VendorLoadConfiguration>;
     culture?: string;
     custom: { [key: string]: any };
+    errorManagement?: {
+        hideCrashedDOMInstancesWhileRunning: boolean,
+        hideCrashedDOMInstancesDuringInit: boolean
+    }
 }
-
 
 export interface Architecture4App {
     getUniqueId(): string;
@@ -25,17 +28,15 @@ export interface Architecture4App {
     getConfig(key: string): any;
     registerService(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block), config: { generateInstanceBeforeInit: true }): void;
     registerSimpleController(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => Block), config: { generateInstanceBeforeInit: false }): void;
-    registerFunctionalSimpleController(uniqueAlias: string, controllerFunction: ( (appHelper?: AppArchitectureHelper) => Block), config: {}): void;
+    registerFunctionalSimpleController(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => Block), config: {}): void;
     registerFunctionalInstancesController(uniqueAlias: string, instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => Block), config: {}): void;
-    initialize(): void;
-    architectureData: ArchitectureData;
+    start(): void;
 }
 
 export interface ArchitectureData {
-    appInitTime: Date;
-    appReadyTime: Date;
-    controllers: { [key: string]: any };
-    services: { [key: string]: any };
+    appInitTime: Date | null;
+    appBeforeInitEventFired: boolean;
+    appInitEventFired: boolean;
 }
 
 export interface VendorLoadConfiguration {
@@ -63,6 +64,13 @@ export interface DOMComponentInstanceReg {
     componentInstance: any;
 }
 
+export interface AppErrorData {
+    url: string;
+    errorDetails: any;
+    controllerType: AppComponentType;
+    uncontrolledError: boolean;
+}
+
 export interface AppArchitectureHelper {
     getService(serviceAlias: string): any;
     getController(controllerAlias: string): any;
@@ -72,17 +80,17 @@ export interface AppArchitectureHelper {
     logOnDebug(content: any): void;
     warnOnDebug(content: any): void;
     reportError(message: string, content: any): void;
-    whoIam(): {aliasOrId: string; type: AppComponentType};
-    subscribe(appEventName: string, callback: Function):void;
+    whoIam(): { aliasOrId: string; type: AppComponentType };
+    subscribe(appEventName: string, callback: Function, targetId?: string): void;
     getRootDOMElement(): HTMLElement;
 }
 
 export enum AppComponentType {
     Unknown = 0,
     SimpleController = 1,
-    InstanceController = 2,
+    DOMInstanceController = 2,
     EmbeddedInstancesController = 3,
     Service = 4,
     SimpleFunctionalController = 5,
-    InstanceFunctionalController = 6
-  }
+    DOMInstanceFunctionalController = 6
+}
