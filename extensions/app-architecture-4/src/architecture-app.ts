@@ -1,5 +1,5 @@
 import { JSVanillaHelper } from "jsvanillahelper-core";
-import { AppArchitectureHelper, AppComponentType, AppErrorData, Architecture4App, Architecture4AppConfig, Architecture4AppId, Architecture4AppSetup, ArchitectureData, ControllerToRegister, DOMComponentInstanceReg, ServiceToRegister } from "./models";
+import { AppArchitectureHelper, AppComponentType, AppContextVar, AppErrorData, Architecture4App, Architecture4AppConfig, Architecture4AppId, Architecture4AppSetup, ArchitectureData, ControllerToRegister, DOMComponentInstanceReg, ServiceToRegister } from "./models";
 import { Block, ClassDeclaration, ClassElement, Type } from "typescript";
 
 export class App implements Architecture4App {
@@ -14,6 +14,7 @@ export class App implements Architecture4App {
     #appHelper: AppArchitectureHelper;
     #debugMode: boolean;
     #architectureData: ArchitectureData;
+    #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
         this.#id = appSetup.id;
@@ -21,12 +22,12 @@ export class App implements Architecture4App {
         this.#helper = helper;
         this.#debugMode = false;
         this.#appHelper = this.#createAppHelper();
+        this.#contextVars = appSetup.contextVars ?? {};
         this.#architectureData = {
             appInitTime: null,
             appBeforeInitEventFired: false,
             appInitEventFired: false
         };
-
     }
 
     getUniqueId(): string {
@@ -44,11 +45,17 @@ export class App implements Architecture4App {
             getService: this.getService.bind(this),
             getInstanceController: this.getInstanceController.bind(this),
             getInstanceControllerById: this.getInstanceControllerById.bind(this),
+            getConfig: this.getConfig.bind(this),
+            V: (target: any = null) => this.#helper.setTarget(target),
+            V$: (query: string = null) => this.#helper.setTarget(document.querySelectorAll(query)),
             logOnDebug: () => { },
             warnOnDebug: () => { },
             reportError: () => { },
             whoIam: () => { return { aliasOrId: "I don't know...", type: AppComponentType.Unknown } },
             subscribe: this.#subscribe.bind(this),
+            emit: () => { },
+            getContextVar: () => { },
+            setContextVar: () => { },
             getRootDOMElement: () => document.documentElement
         }
         this.#helper.makeInmutable(appHelper);
@@ -157,13 +164,13 @@ export class App implements Architecture4App {
 
     #handleControllerInstancesInit() {
         const handleInstanceCreation = (DOMComponent: HTMLElement, instancesController: EmbeddedInstancesController) => {
-          const instanceReg =  instancesController.createComponentInstance(DOMComponent, this.#customizeAppHelper.bind(this));
-          if (!this.#DOMComponentInstances[instanceReg.uniqueId]){
-            this.#DOMComponentInstances[instanceReg.uniqueId] = instanceReg;
-          }
-          else {
-            this.#reportInlineInitError(DOMComponent, `DOM Instance id "${instanceReg.uniqueId}" not unique`);
-          }
+            const instanceReg = instancesController.createComponentInstance(DOMComponent, this.#customizeAppHelper.bind(this));
+            if (!this.#DOMComponentInstances[instanceReg.uniqueId]) {
+                this.#DOMComponentInstances[instanceReg.uniqueId] = instanceReg;
+            }
+            else {
+                this.#reportInlineInitError(DOMComponent, `DOM Instance id "${instanceReg.uniqueId}" not unique`);
+            }
         }
 
         const domInstanceComponents = [...document.querySelectorAll(
@@ -253,15 +260,20 @@ export class App implements Architecture4App {
                 uniqueAlias
             );
         }
-        const subscribe = (appEventName: string, callback: Function, targetId?: string) => {
+
+        const emit = (customEventName: string, data?: any) => {
+            this.#emitCustomEvent(customEventName, data, uniqueAlias);
+        }
+
+        const subscribe = (appEventName: string, callback: (data: any) => any, targetId?: string) => {
             const isDOMInstanceController = controllerType === AppComponentType.DOMInstanceController || controllerType === AppComponentType.DOMInstanceFunctionalController;
 
-            const handleAppEventFeedback = () => {
+            const handleAppEventFeedback = (data) => {
                 if (this.#debugMode) {
                     this.#helper.console('log', `🪃 ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} RECEIVED`);
                 }
                 try {
-                    callback();
+                    callback(data);
                     if (this.#debugMode) {
                         this.#helper.console('log', `🪃✅ ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} COMPLETED`);
                     }
@@ -279,12 +291,12 @@ export class App implements Architecture4App {
             //hijack subscription callback
             if (appEventName === "ViewportVisibleInit" && isDOMInstanceController) {
                 this.#helper.onViewportVisibleOnce(() => {
-                    handleAppEventFeedback();
+                    handleAppEventFeedback(null);
                 }, { root: null, rootMargin: "0px", threshold: 1.0 }, instanceRootDOMElement);
             }
             else {
-                this.#appHelper.subscribe(appEventName, () => {
-                    handleAppEventFeedback();
+                this.#appHelper.subscribe(appEventName, (data) => {
+                    handleAppEventFeedback(data);
                 }, targetId)
             }
         }
@@ -294,8 +306,48 @@ export class App implements Architecture4App {
                 type: controllerType
             }
         }
+
+        const setContextVar = (alias: string, value: any, readOnly?: boolean, scope?: Array<string>) => {
+            const currentVar = this.#contextVars[alias];
+            if (currentVar) {
+                if (!(currentVar.scope?.includes(uniqueAlias) || !currentVar.scope)) {
+                    reportError(`Error setting value to context var "${alias}", is out of scope.`)
+                    return;
+                }
+                if (readOnly && currentVar.creatorId !== uniqueAlias) {
+                    reportError(`Error setting value to context var "${alias}", is read only.`)
+                    return;
+                }
+                this.#contextVars[alias].value = value;
+            }
+            this.#contextVars[alias] = {
+                alias,
+                value,
+                readOnly: !!readOnly,
+                scope: scope ? [...uniqueAlias, ...scope] : null
+            };
+            this.#emitAppEvent(`ContextVarChange_${alias}`)
+        }
+
+        const getContextVar = (alias: string, newValueCallback?: (value: any) => any) => {
+            const currentVar = this.#contextVars[alias];
+            if (currentVar) {
+                if (currentVar.scope?.includes(uniqueAlias) || !currentVar.scope) {
+                    if (newValueCallback) {
+                        this.#appHelper.subscribe(`ContextVarChange_${alias}`, () => newValueCallback(this.#contextVars[alias]?.value));
+                    }
+                    return currentVar.value;
+                }
+                else {
+                    reportError(`Error accessing value of context var "${alias}", is out of scope.`)
+                }
+            }
+            return null;
+        }
+
+
         const getRootDOMElement = instanceRootDOMElement ? () => instanceRootDOMElement : this.#appHelper.getRootDOMElement;
-        return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, getRootDOMElement, whoIam };
+        return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, getRootDOMElement, whoIam, emit, getContextVar, setContextVar };
     }
 
     #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => Block)) {
@@ -371,8 +423,28 @@ export class App implements Architecture4App {
         this.#architectureData.appInitEventFired = true;
     }
 
+    #emitCustomEvent(customEventName: string, data?: any, originId?: string) {
+        //Block reserved app events
+        switch (customEventName) {
+            case "AppPreInit":
+            case "AppInit":
+            case "ViewportVisibleInit":
+                return;
+        }
+
+        const detail = {
+            originId: originId ?? null,
+            data: data ?? null
+        }
+
+        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${customEventName}`, { detail }));
+    }
+
     #emitAppEvent(appEventName: string, originId?: string) {
-        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${appEventName}`, originId ? { detail: { originId } } : null));
+        const detail = {
+            originId: originId ? originId : null
+        }
+        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${appEventName}`, { detail }));
     }
 
     #emitAppErrorEvent(errorData: AppErrorData, originId?: string) {

@@ -1,8 +1,11 @@
 import { Block, ClassDeclaration } from "typescript";
+import { EmbeddedImageLoaderServiceConfig } from "./embedded-image-loader";
+import { JSVanillaHelper } from "jsvanillahelper-core";
 
 export interface Architecture4AppSetup {
     id: Architecture4AppId,
-    config: Architecture4AppConfig
+    config: Architecture4AppConfig,
+    contextVars?: { [key: string]: AppContextVar };
 }
 
 export interface Architecture4AppId {
@@ -14,7 +17,7 @@ export interface Architecture4AppId {
 export interface Architecture4AppConfig {
     vendors: Array<VendorLoadConfiguration>;
     culture?: string;
-    custom: { [key: string]: any };
+    custom: { [key: string]: any | EmbeddedImageLoaderServiceConfig };
     errorManagement?: {
         hideCrashedDOMInstancesWhileRunning: boolean,
         hideCrashedDOMInstancesDuringInit: boolean
@@ -64,6 +67,14 @@ export interface DOMComponentInstanceReg {
     componentInstance: any;
 }
 
+export interface AppContextVar {
+    alias: string;
+    value: any;
+    scope?: Array<string>;
+    readOnly?: boolean;
+    creatorId?: string;
+}
+
 export interface AppErrorData {
     url: string;
     errorDetails: any;
@@ -77,11 +88,17 @@ export interface AppArchitectureHelper {
     getInstanceControllerById(instanceUniqueId: string): any;
     getInstanceController(instanceRootDOMElement: HTMLElement): any;
     getCurrentCulture(): string;
+    getConfig(key: string): any;
+    V(target: any): JSVanillaHelper;
+    V$(query: string): JSVanillaHelper;
     logOnDebug(content: any): void;
     warnOnDebug(content: any): void;
     reportError(message: string, content: any): void;
     whoIam(): { aliasOrId: string; type: AppComponentType };
-    subscribe(appEventName: string, callback: Function, targetId?: string): void;
+    subscribe(appEventName: string, callback: (data: any) => any, targetId?: string): void;
+    emit(customEventName: string, data?: any): void;
+    getContextVar(variableName: string, newValueCallback?: (value: any) => any): any;
+    setContextVar(variableName: string, value: any, readOnly?: boolean, scope?: Array<string>): void;
     getRootDOMElement(): HTMLElement;
 }
 
