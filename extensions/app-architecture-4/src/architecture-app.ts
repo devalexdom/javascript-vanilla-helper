@@ -1,8 +1,10 @@
 import { JSVanillaHelper } from "jsvanillahelper-core";
 import { AppArchitectureHelper, AppComponentType, AppContextVar, AppErrorData, Architecture4App, Architecture4AppConfig, Architecture4AppId, Architecture4AppSetup, ArchitectureData, ControllerToRegister, DOMComponentInstanceReg, ServiceToRegister } from "./models";
-import { Block, ClassDeclaration, ClassElement, Type } from "typescript";
+import { EmbeddedVendorLoaderService } from "./embedded-vendor-loader";
+import { EmbeddedImageLoaderService } from "./embedded-image-loader";
 
 export class App implements Architecture4App {
+    #version: string;
     #id: Architecture4AppId;
     #config: Architecture4AppConfig;
     #controllers: { [key: string]: any };
@@ -17,16 +19,19 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
+        this.#version = "4.0.0 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
-        this.#debugMode = false;
+        this.#debugMode = this.#getDebugModeSettingFromLS();
         this.#appHelper = this.#createAppHelper();
-        this.#contextVars = appSetup.contextVars ?? {};
+        this.#setInitialContextVars(appSetup);
         this.#architectureData = {
             appInitTime: null,
             appBeforeInitEventFired: false,
-            appInitEventFired: false
+            appInitEventFired: false,
+            appServicesInitEventSubscribedControllers: new Set(),
+            appServicesInitEventCompletedControllers: new Set()
         };
     }
 
@@ -36,6 +41,16 @@ export class App implements Architecture4App {
 
     getBuildNumber(): number {
         return this.#id.buildNumber;
+    }
+
+    #setInitialContextVars(appSetup: Architecture4AppSetup) {
+        const debugModeVar: AppContextVar = {
+            alias: "isAppInDebugMode",
+            value: this.#debugMode,
+            readOnly: true
+        }
+        this.#contextVars = appSetup.contextVars ?? {};
+        this.#contextVars[debugModeVar.alias] = debugModeVar;
     }
 
     #createAppHelper(): AppArchitectureHelper {
@@ -62,6 +77,10 @@ export class App implements Architecture4App {
         return appHelper;
     }
 
+    #getDebugModeSettingFromLS() {
+        return !!localStorage.getItem('JSVHAppArchitectureDebug');
+    }
+
     getCulture(): string {
         return this.#config.culture ?? "";
     }
@@ -70,7 +89,7 @@ export class App implements Architecture4App {
         return this.#config.custom[key] ?? null;
     }
 
-    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => Block), config: { generateInstanceBeforeInit: false; }): void {
+    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerClass) {
             console.error("AppArchitecture: Unable to register controller, unique alias and controllerClass are expected parameters.")
         }
@@ -90,7 +109,7 @@ export class App implements Architecture4App {
         }
     }
 
-    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => Block), config: { generateInstanceBeforeInit: false; }): void {
+    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerFunction) {
             console.error("AppArchitecture: Unable to register controller, unique alias and controllerFunction are expected parameters.")
         }
@@ -110,7 +129,7 @@ export class App implements Architecture4App {
         }
     }
 
-    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block), config: {}): void {
+    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: {}): void {
         if (!uniqueAlias || !serviceControllerClass) {
             console.error("AppArchitecture: Unable to register service, unique alias and serviceControllerClass are expected parameters.")
         }
@@ -121,7 +140,7 @@ export class App implements Architecture4App {
         this.#createServiceInstance(uniqueAlias, serviceControllerClass);
     }
 
-    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block), config: {}): void {
+    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: {}): void {
         if (!uniqueAlias || !instanceControllerClass) {
             console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerClass are expected parameters.")
         }
@@ -129,7 +148,7 @@ export class App implements Architecture4App {
         this.#controllers = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null);
     }
 
-    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => Block), config: {}): void {
+    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: {}): void {
         if (!uniqueAlias || !instanceControllerFunction) {
             console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerFunction are expected parameters.")
         }
@@ -211,14 +230,37 @@ export class App implements Architecture4App {
         });
     }
 
-    #subscribe(appEventName: string, callback: Function, originId?: string) {
+    #awaitServicesInitialization() {
+        return new Promise<void>((resolve, reject) => {
+            if (this.#architectureData.appServicesInitEventSubscribedControllers.size === 0) {
+                resolve();
+            }
+            else {
+                this.#subscribe("AppServicesInit%", (data, originId) => {
+                    if (this.#services[originId]) {
+                        this.#architectureData.appServicesInitEventCompletedControllers.add(originId);
+                        if (this.#architectureData.appServicesInitEventCompletedControllers.size === this.#architectureData.appServicesInitEventSubscribedControllers.size) {
+                            resolve();
+                        }
+                    }
+                });
+                this.#subscribe("AppServicesInit/", (data, originId) => {
+                    if (this.#services[originId]) {
+                        reject();
+                    }
+                });
+            }
+        });
+    }
+
+    #subscribe(appEventName: string, callback: (data: any, originId: string) => void, originId?: string) {
         if (appEventName === "AppInit" && this.#architectureData.appInitEventFired || appEventName === "AppBeforeInit" && this.#architectureData.appBeforeInitEventFired) {
-            callback();
+            callback(null, this.#id.uniqueId);
             return;
         }
         window.addEventListener(`${this.#id.uniqueId}_${appEventName}`, (e: CustomEvent) => {
             if (!e.detail || originId && e.detail?.originId === originId) {
-                callback();
+                callback(e.detail?.data, e.detail?.originId ?? "unknown");
             }
         });
     }
@@ -265,15 +307,15 @@ export class App implements Architecture4App {
             this.#emitCustomEvent(customEventName, data, uniqueAlias);
         }
 
-        const subscribe = (appEventName: string, callback: (data: any) => any, targetId?: string) => {
+        const subscribe = (appEventName: string, callback: (data: any, originId: any) => any, targetId?: string) => {
             const isDOMInstanceController = controllerType === AppComponentType.DOMInstanceController || controllerType === AppComponentType.DOMInstanceFunctionalController;
 
-            const handleAppEventFeedback = (data) => {
+            const handleAppEventFeedback = (data: any, originId: any) => {
                 if (this.#debugMode) {
                     this.#helper.console('log', `🪃 ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} RECEIVED`);
                 }
                 try {
-                    callback(data);
+                    callback(data, originId);
                     if (this.#debugMode) {
                         this.#helper.console('log', `🪃✅ ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} COMPLETED`);
                     }
@@ -291,12 +333,16 @@ export class App implements Architecture4App {
             //hijack subscription callback
             if (appEventName === "ViewportVisibleInit" && isDOMInstanceController) {
                 this.#helper.onViewportVisibleOnce(() => {
-                    handleAppEventFeedback(null);
+                    handleAppEventFeedback(null, null);
                 }, { root: null, rootMargin: "0px", threshold: 1.0 }, instanceRootDOMElement);
             }
             else {
-                this.#appHelper.subscribe(appEventName, (data) => {
-                    handleAppEventFeedback(data);
+                if (appEventName === "AppServicesInit" && this.#services[uniqueAlias]) {
+                    this.#architectureData.appServicesInitEventSubscribedControllers.add(uniqueAlias);
+                }
+
+                this.#appHelper.subscribe(appEventName, (data, originId) => {
+                    handleAppEventFeedback(data, originId);
                 }, targetId)
             }
         }
@@ -350,7 +396,7 @@ export class App implements Architecture4App {
         return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, getRootDOMElement, whoIam, emit, getContextVar, setContextVar };
     }
 
-    #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => Block)) {
+    #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.SimpleController);
             const controllerInstance = new controllerClass(appHelperToInject);
@@ -361,7 +407,7 @@ export class App implements Architecture4App {
         }
     }
 
-    #createFunctionalControllerInstance(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => Block)) {
+    #createFunctionalControllerInstance(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.SimpleFunctionalController);
             const controllerInstance = controllerFunction(appHelperToInject);
@@ -391,7 +437,7 @@ export class App implements Architecture4App {
         );
     }
 
-    #createServiceInstance(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block)) {
+    #createServiceInstance(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.Service);
             const controllerInstance = new serviceControllerClass(appHelperToInject);
@@ -403,9 +449,21 @@ export class App implements Architecture4App {
     }
 
     start(): void {
+        if (this.#architectureData.appInitTime) return;
+        this.#architectureData.appInitTime = new Date();
+
+        if (this.#debugMode) {
+            console.log(
+                `JSVanillaHelper APP Architecture ${this.#version} is in verbose & debug mode 🧯`
+            );
+            console.log(`💽 ${this.#id.alias} | Unique ID [${this.#id.uniqueId}] | Build Number [${this.#id.buildNumber ?? "Unknown"}]`);
+        }
+
         this.#emitAppEvent("AppBeforeInit");
         this.#architectureData.appBeforeInitEventFired = true;
         //Register services
+        this.#createServiceInstance("vendorLoader", EmbeddedVendorLoaderService);
+        this.#createServiceInstance("imageLoader", EmbeddedImageLoaderService);
         Object.values(this.#servicesToRegister).forEach(serviceToRegister => {
             this.#createServiceInstance(serviceToRegister.uniqueAlias, serviceToRegister.serviceControllerClass);
         });
@@ -418,15 +476,23 @@ export class App implements Architecture4App {
                 this.#createFunctionalControllerInstance(controllerToRegister.uniqueAlias, controllerToRegister.controllerFunction);
             }
         });
-        this.#handleControllerInstancesInit();
-        this.#emitAppEvent("AppInit");
-        this.#architectureData.appInitEventFired = true;
+
+        this.#awaitServicesInitialization().then(() => {
+            this.#handleControllerInstancesInit();
+            this.#emitAppEvent("AppInit");
+            this.#architectureData.appInitEventFired = true;
+        }).catch(() => {
+            console.error(`AppArchitecture: Service controller error, cannot continue with app initialization.`);
+        })
+
+
     }
 
     #emitCustomEvent(customEventName: string, data?: any, originId?: string) {
         //Block reserved app events
         switch (customEventName) {
             case "AppPreInit":
+            case "AppServicesInit":
             case "AppInit":
             case "ViewportVisibleInit":
                 return;
@@ -488,20 +554,16 @@ export class App implements Architecture4App {
 
         return this.getInstanceControllerById(uniqueId);
     }
-
-    getHelper(): AppArchitectureHelper {
-        return this.#appHelper;
-    }
 }
 
 class EmbeddedInstancesController {
     #uniqueAlias: string;
-    #componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block) | null;
-    #componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => Block) | null;
+    #componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any) | null;
+    #componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any) | null;
     #createdInstancesCount: number;
 
 
-    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => Block), componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => Block)) {
+    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any)) {
         this.#createdInstancesCount = 0;
         this.#uniqueAlias = uniqueAlias;
         this.#componentInstanceControllerClass = componentInstanceControllerClass;

@@ -1,36 +1,15 @@
 import { JSVanillaHelper, IJSVanillaHelper_Extension } from "jsvanillahelper-core";
-interface IHelperScopeBind {
-    alias: string;
-    binds: object;
-    helperInstance?: JSVanillaHelper;
-    isBinded?: boolean;
-}
-interface IHelperScopeDeclareBind {
-    alias: string;
-    binds: string[];
-    helperInstance: JSVanillaHelper;
-}
-declare class HelperScope implements IJSVanillaHelper_Extension {
-    scopeTarget: IHelperScopeBind;
+import { App } from "./architecture-app";
+declare class AppArchitecture4 implements IJSVanillaHelper_Extension {
     extensionName: string;
     version: number;
     helper: JSVanillaHelper;
-    scopes: Map<string, IHelperScopeBind>;
-    globalBindAlias: string;
-    flags: object;
-    constructor(globalBindAlias?: string);
-    onAddExtension(): void;
-    handleHelperScopeGlobalBind(): void;
-    handleExtensionParameters(): void;
-    declare(newScope: IHelperScopeDeclareBind, globalBindAlias?: string): any;
-    handleGlobalHelperScopeInstance(globalBindAlias: string): any;
-    getHelperInstance(scopeAlias: string): any;
-    getSelector(selectorMethod: string): any;
-    selectScope(scopeAlias: string): HelperScope;
-    handleScope(scope: IHelperScopeBind): void;
-    handleGlobalScopeBinds(scope: IHelperScopeBind): void;
-    handleScopeBinds(scope: IHelperScopeBind): void;
-    getHelperSelector(selectorMethod: string, helperInstance: JSVanillaHelper): any;
+    constructor();
+    extendHelperInstance(helper: any): void;
+    toggleLSDebugModeSetting(): void;
+    createApp(setAsMainApp?: boolean): App;
+    getApp(uniqueId: string): any;
+    getMainApp(): object;
 }
-declare const helperScope: HelperScope;
+declare const helperScope: AppArchitecture4;
 export default helperScope;
