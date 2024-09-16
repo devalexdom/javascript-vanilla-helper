@@ -41,7 +41,7 @@ export class EmbeddedImageLoaderService {
         }
         else if (customConfig === false) return;
 
-        appHelper.subscribe("AppInit", () => this.#init());
+        appHelper.subscribe("AppServicesInit", () => this.#init());
     }
 
     #init() {

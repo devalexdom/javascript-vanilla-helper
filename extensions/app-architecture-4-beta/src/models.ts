@@ -28,10 +28,10 @@ export interface Architecture4App {
     getBuildNumber(): number;
     getCulture(): string;
     getConfig(key: string): any;
-    registerService(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: true }): void;
-    registerSimpleController(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: false }): void;
-    registerFunctionalSimpleController(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: {}): void;
-    registerFunctionalInstancesController(uniqueAlias: string, instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: {}): void;
+    registerService(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: true }): void;
+    registerSimpleController(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false }): void;
+    registerFunctionalSimpleController(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void;
+    registerFunctionalInstancesController(uniqueAlias: string, instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void;
     start(): void;
 }
 

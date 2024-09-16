@@ -19,13 +19,18 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
-        this.#version = "4.0.0 beta";
+        this.#version = "4.0.1 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
         this.#debugMode = this.#getDebugModeSettingFromLS();
         this.#appHelper = this.#createAppHelper();
         this.#setInitialContextVars(appSetup);
+        this.#servicesToRegister = {};
+        this.#controllersToRegister = {};
+        this.#services = {};
+        this.#controllers = {};
+        this.#DOMComponentInstances = {};
         this.#architectureData = {
             appInitTime: null,
             appBeforeInitEventFired: false,
@@ -33,6 +38,16 @@ export class App implements Architecture4App {
             appServicesInitEventSubscribedControllers: new Set(),
             appServicesInitEventCompletedControllers: new Set()
         };
+        window["appTestOnly"] = this;
+    }
+
+    debug() {
+        return {
+            services: this.#services,
+            controllers: this.#controllers,
+            data: this.#architectureData
+        }
+
     }
 
     getUniqueId(): string {
@@ -89,12 +104,14 @@ export class App implements Architecture4App {
         return this.#config.custom[key] ?? null;
     }
 
-    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: false; }): void {
+    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerClass) {
-            console.error("AppArchitecture: Unable to register controller, unique alias and controllerClass are expected parameters.")
+            console.error("AppArchitecture: Unable to register controller, unique alias and controllerClass are expected parameters.");
+            return;
         }
-        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias]) {
-            console.error("AppArchitecture: Unable to register controller, unique alias is not unique or you're registering the controller again.")
+        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
+            console.error(`AppArchitecture: Unable to register controller, "${uniqueAlias}" is already registered.`);
+            return;
         }
 
         if (config?.generateInstanceBeforeInit) {
@@ -105,16 +122,18 @@ export class App implements Architecture4App {
                 uniqueAlias,
                 controllerClass,
                 controllerFunction: null
-            }
+            };
         }
     }
 
-    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: { generateInstanceBeforeInit: false; }): void {
+    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerFunction) {
-            console.error("AppArchitecture: Unable to register controller, unique alias and controllerFunction are expected parameters.")
+            console.error("AppArchitecture: Unable to register controller, unique alias and controllerFunction are expected parameters.");
+            return
         }
-        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias]) {
-            console.error("AppArchitecture: Unable to register controller, unique alias is not unique or you're registering the controller again.")
+        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
+            console.error(`AppArchitecture: Unable to register controller, "${uniqueAlias}" is already registered.`);
+            return;
         }
 
         if (config?.generateInstanceBeforeInit) {
@@ -125,35 +144,47 @@ export class App implements Architecture4App {
                 uniqueAlias,
                 controllerClass: null,
                 controllerFunction
-            }
+            };
         }
     }
 
-    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: {}): void {
+    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !serviceControllerClass) {
             console.error("AppArchitecture: Unable to register service, unique alias and serviceControllerClass are expected parameters.")
+            return;
         }
-        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias]) {
-            console.error("AppArchitecture: Unable to register service, unique alias is not unique or you're registering the service again.")
+        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
+            console.error(`AppArchitecture: Unable to register service, "${uniqueAlias}" is already registered.`);
+            return;
         }
 
         this.#createServiceInstance(uniqueAlias, serviceControllerClass);
     }
 
-    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config: {}): void {
+    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerClass) {
-            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerClass are expected parameters.")
+            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerClass are expected parameters.");
+            return;
+        }
+        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
+            console.error(`AppArchitecture: Unable to register instance controller, "${uniqueAlias}" is already registered.`);
+            return;
         }
 
-        this.#controllers = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null);
+        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null);
     }
 
-    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config: {}): void {
+    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerFunction) {
-            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerFunction are expected parameters.")
+            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerFunction are expected parameters.");
+            return;
+        }
+        if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
+            console.error(`AppArchitecture: Unable to register instance controller, "${uniqueAlias}" is already registered.`);
+            return;
         }
 
-        this.#controllers = new EmbeddedInstancesController(uniqueAlias, null, instanceControllerFunction);
+        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, null, instanceControllerFunction);
     }
 
 
@@ -253,14 +284,40 @@ export class App implements Architecture4App {
         });
     }
 
+    #emitCustomEvent(customEventName: string, data?: any, originId?: string) {
+        //Block reserved app events
+        switch (customEventName) {
+            case "AppPreInit":
+            case "AppServicesInit":
+            case "AppInit":
+            case "ViewportVisibleInit":
+                return;
+        }
+
+        const detail = {
+            originId: originId ?? null,
+            data: data ?? null
+        }
+
+        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${customEventName}`, { detail }));
+    }
+
+    #emitAppEvent(appEventName: string, originId?: string) {
+        const detail = {
+            originId: originId ? originId : null
+        }
+        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${appEventName}`, { detail }));
+    }
+
     #subscribe(appEventName: string, callback: (data: any, originId: string) => void, originId?: string) {
         if (appEventName === "AppInit" && this.#architectureData.appInitEventFired || appEventName === "AppBeforeInit" && this.#architectureData.appBeforeInitEventFired) {
             callback(null, this.#id.uniqueId);
             return;
         }
         window.addEventListener(`${this.#id.uniqueId}_${appEventName}`, (e: CustomEvent) => {
-            if (!e.detail || originId && e.detail?.originId === originId) {
-                callback(e.detail?.data, e.detail?.originId ?? "unknown");
+            const eventOriginId = e.detail?.originId;
+            if (!eventOriginId || eventOriginId === originId || !originId) {
+                callback(e.detail?.data, eventOriginId ?? "anonymous");
             }
         });
     }
@@ -312,12 +369,12 @@ export class App implements Architecture4App {
 
             const handleAppEventFeedback = (data: any, originId: any) => {
                 if (this.#debugMode) {
-                    this.#helper.console('log', `🪃 ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} RECEIVED`);
+                    this.#helper.console('log', `🪃⬇️ ${uniqueAlias} (${AppComponentType[controllerType]}) has received the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} subscription. | ${new Date().toISOString()}`);
                 }
                 try {
                     callback(data, originId);
                     if (this.#debugMode) {
-                        this.#helper.console('log', `🪃✅ ${uniqueAlias} (${controllerType}) SUBSCRIPTION TO ${appEventName}${targetId ? ` ~ ${targetId}` : ""} COMPLETED`);
+                        this.#helper.console('log', `🪃✅ ${uniqueAlias} (${AppComponentType[controllerType]}) completed the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} subscription. | ${new Date().toISOString()}`);
                     }
                     this.#emitAppEvent(`${appEventName}%`, uniqueAlias);
                 }
@@ -337,7 +394,7 @@ export class App implements Architecture4App {
                 }, { root: null, rootMargin: "0px", threshold: 1.0 }, instanceRootDOMElement);
             }
             else {
-                if (appEventName === "AppServicesInit" && this.#services[uniqueAlias]) {
+                if (appEventName === "AppServicesInit" && controllerType === AppComponentType.Service) {
                     this.#architectureData.appServicesInitEventSubscribedControllers.add(uniqueAlias);
                 }
 
@@ -476,41 +533,18 @@ export class App implements Architecture4App {
                 this.#createFunctionalControllerInstance(controllerToRegister.uniqueAlias, controllerToRegister.controllerFunction);
             }
         });
-
         this.#awaitServicesInitialization().then(() => {
+            this.#helper.console("log", "Services initialization completed ✅");
             this.#handleControllerInstancesInit();
             this.#emitAppEvent("AppInit");
             this.#architectureData.appInitEventFired = true;
-        }).catch(() => {
+        }).catch((err) => {
             console.error(`AppArchitecture: Service controller error, cannot continue with app initialization.`);
-        })
-
-
-    }
-
-    #emitCustomEvent(customEventName: string, data?: any, originId?: string) {
-        //Block reserved app events
-        switch (customEventName) {
-            case "AppPreInit":
-            case "AppServicesInit":
-            case "AppInit":
-            case "ViewportVisibleInit":
-                return;
-        }
-
-        const detail = {
-            originId: originId ?? null,
-            data: data ?? null
-        }
-
-        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${customEventName}`, { detail }));
-    }
-
-    #emitAppEvent(appEventName: string, originId?: string) {
-        const detail = {
-            originId: originId ? originId : null
-        }
-        window.dispatchEvent(new CustomEvent(`${this.#id.uniqueId}_${appEventName}`, { detail }));
+            if (this.#debugMode) {
+                console.error(err);
+            }
+        });
+        this.#emitAppEvent("AppServicesInit");
     }
 
     #emitAppErrorEvent(errorData: AppErrorData, originId?: string) {

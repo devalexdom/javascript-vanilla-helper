@@ -1,6 +1,6 @@
 {
   "name": "jsvanillahelper-apparchitecture-beta",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "[Beta version] Extension to create a high-performance, lightweight, reliable, easy to develop and maintain web application based on vanilla JavaScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

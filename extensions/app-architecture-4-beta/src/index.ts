@@ -8,7 +8,7 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
     helper: JSVanillaHelper;
     constructor() {
         this.extensionName = 'AppArchitecture';
-        this.version = 4.0;
+        this.version = 4.01;
     }
 
     extendHelperInstance(helper) {
@@ -20,7 +20,7 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
 
     toggleLSDebugModeSetting() {
         const debugMode = !!localStorage.getItem('JSVHAppArchitectureDebug');
-        if (debugMode) {
+        if (!debugMode) {
             localStorage.setItem('JSVHAppArchitectureDebug', 'true');
         }
         else {
@@ -28,7 +28,7 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
         }
         this.helper.console(
             'log',
-            `🧯 JSVanillaHelper AppArchitecture debug mode set to ${debugMode}, please refresh website.`
+            `🧯 JSVanillaHelper AppArchitecture debug mode set to ${!debugMode}, please refresh website.`
         );
     }
 
