@@ -137,12 +137,18 @@ export declare class JSVanillaHelper {
         root: any;
         rootMargin: string;
         threshold: number;
-    }, t?: HTMLElement | Array<HTMLElement>): void;
+    }, t?: HTMLElement | Array<HTMLElement>): {
+        stopObserver: () => void;
+        getObserver: () => IntersectionObserver;
+    };
     traceViewportVisibility(isVisibleCallback?: (element: HTMLElement) => void, isHiddenCallback?: (element: HTMLElement) => void, options?: {
         root: any;
         rootMargin: string;
         threshold: number;
-    }, t?: HTMLElement | Array<HTMLElement>): void;
+    }, t?: HTMLElement | Array<HTMLElement>): {
+        stopObserver: () => void;
+        getObserver: () => IntersectionObserver;
+    };
     setLSWithExpiry(value: any, expiryDate: Date, readOnce?: boolean, key?: any): void;
     getLSWithExpiry(key?: any): any;
     hasAttribute(AttributeName?: string, t?: any): boolean;
