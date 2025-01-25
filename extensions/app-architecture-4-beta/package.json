@@ -1,6 +1,6 @@
 {
   "name": "jsvanillahelper-apparchitecture-beta",
-  "version": "4.0.1",
+  "version": "4.0.3",
   "description": "[Beta version] Extension to create a high-performance, lightweight, reliable, easy to develop and maintain web application based on vanilla JavaScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "dependencies": {
-    "jsvanillahelper-core": "^2.3.0",
+    "jsvanillahelper-core": "^2.3.2",
     "rollup": "^4.19.1",
     "rollup-plugin-typescript2": "^0.36.0"
   },

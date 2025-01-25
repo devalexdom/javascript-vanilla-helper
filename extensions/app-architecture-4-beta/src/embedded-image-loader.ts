@@ -71,7 +71,7 @@ export class EmbeddedImageLoaderService {
         V(imagesToTrack).onViewportVisibleOnce((image) => {
             image["activeVisibilityTracking"] = false;
             this.loadLazyElement(image);
-        });
+        }, { root: null, rootMargin: "0px", threshold: 0.1 });
     }
 
     #setInitialContextVars() {

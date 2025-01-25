@@ -5,5 +5,5 @@ export interface EmbeddedVendorLoaderServiceConfig {
 export declare class EmbeddedVendorLoaderService {
     #private;
     constructor(appHelper: AppArchitectureHelper);
-    requestVendorLoad(triggerClass?: string, loadCallback?: () => void): void;
+    requestVendorLoad(uniqueName: string, loadCallback?: () => void): void;
 }

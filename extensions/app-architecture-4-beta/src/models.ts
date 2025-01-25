@@ -44,6 +44,7 @@ export interface ArchitectureData {
 }
 
 export interface VendorLoadConfiguration {
+    uniqueName: string;
     triggerClass: string;
     conflictTriggerClass: Array<string>;
     scriptPath: string;
@@ -94,11 +95,13 @@ export interface AppArchitectureHelper {
     getConfig(key: string): any;
     V(target?: any): JSVanillaHelper;
     V$(query: string): JSVanillaHelper;
-    logOnDebug(content: any): void;
-    warnOnDebug(content: any): void;
+    logOnDebug(content: any, trace?: boolean): void;
+    warnOnDebug(content: any, trace?: boolean): void;
     reportError(message: string, content: any): void;
     whoIam(): { aliasOrId: string; type: AppComponentType };
     subscribe(appEventName: string, callback: (data: any, originId: string) => void, targetId?: string): void;
+    subscribeToAll(appEvents: Array<{ appEventName: string, targetId?: string }>, callback: (data: Array<any>, originId: Array<string>) => any): void;
+    useVendor(vendorUniqueName: string, callback: () => any, appEventInitMethod?: string, lazyVendorLoad?: boolean): void;
     emit(customEventName: string, data?: any): void;
     getContextVar(variableName: string, newValueCallback?: (value: any) => any): any;
     setContextVar(variableName: string, value: any, readOnly?: boolean, scope?: Array<string>): void;

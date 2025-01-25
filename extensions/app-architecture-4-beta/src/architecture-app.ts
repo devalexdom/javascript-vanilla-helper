@@ -19,7 +19,7 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
-        this.#version = "4.0.1 beta";
+        this.#version = "4.0.3 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
@@ -38,7 +38,6 @@ export class App implements Architecture4App {
             appServicesInitEventSubscribedControllers: new Set(),
             appServicesInitEventCompletedControllers: new Set()
         };
-        window["appTestOnly"] = this;
     }
 
     debug() {
@@ -83,6 +82,8 @@ export class App implements Architecture4App {
             reportError: () => { },
             whoIam: () => { return { aliasOrId: "I don't know...", type: AppComponentType.Unknown } },
             subscribe: this.#subscribe.bind(this),
+            subscribeToAll: () => { },
+            useVendor: () => { },
             emit: () => { },
             getContextVar: () => { },
             setContextVar: () => { },
@@ -163,11 +164,11 @@ export class App implements Architecture4App {
 
     registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerClass) {
-            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerClass are expected parameters.");
+            console.error("AppArchitecture: Unable to register instances controller, unique alias and instanceControllerClass are expected parameters.");
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
-            console.error(`AppArchitecture: Unable to register instance controller, "${uniqueAlias}" is already registered.`);
+            console.error(`AppArchitecture: Unable to register instances controller, "${uniqueAlias}" is already registered.`);
             return;
         }
 
@@ -176,40 +177,34 @@ export class App implements Architecture4App {
 
     registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerFunction) {
-            console.error("AppArchitecture: Unable to register instance controller, unique alias and instanceControllerFunction are expected parameters.");
+            console.error("AppArchitecture: Unable to register instances controller, unique alias and instanceControllerFunction are expected parameters.");
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
-            console.error(`AppArchitecture: Unable to register instance controller, "${uniqueAlias}" is already registered.`);
+            console.error(`AppArchitecture: Unable to register instances controller, "${uniqueAlias}" is already registered.`);
             return;
         }
 
         this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, null, instanceControllerFunction);
     }
 
-
-    #reportInlineInitError(DOMComponent, error?: any) {
-        const visibleErrorFeedback = (DOMComponent) => {
-            if (this.#debugMode) {
-                DOMComponent.style.opacity = 0.6;
-                DOMComponent.style.filter = 'grayscale(100%)';
-                DOMComponent.prepend('⚠️');
-            } else {
-                if (this.#config.errorManagement?.hideCrashedDOMInstancesDuringInit) {
-                    DOMComponent.style.display = "none";
-                }
+    #domInstanceVisibleErrorFeedback(instanceDomElement: HTMLElement) {
+        if (this.#debugMode) {
+            instanceDomElement.style.opacity = "0.6";
+            instanceDomElement.style.filter = "grayscale(100%)";
+            instanceDomElement.prepend("⚠️");
+        } else {
+            if (this.#config.errorManagement?.hideCrashedDOMInstancesDuringInit) {
+                instanceDomElement.style.display = "none";
             }
-        };
-        this.#helper.console(
-            'error',
-            `🤕 An unhandled error happened in the inline init of DOM instance component "${(DOMComponent.id) ? DOMComponent.id : "-NO ID-"}"`
-        );
-        this.#helper.console('error', DOMComponent);
-        this.#helper.console(
-            'error',
-            error || 'Controller not found in main app'
-        );
-        visibleErrorFeedback(DOMComponent);
+        }
+    }
+
+    #reportInlineInitError(instanceDomElement, error?: any) {
+        this.#helper.console('error', `AppArchitecture: 🤕 An unexpected error happened in the inline init of DOM instance component "${(instanceDomElement.id) ? instanceDomElement.id : "-NO ID-"}"`);
+        this.#helper.console('error', instanceDomElement);
+        this.#helper.console('error', error);
+        this.#domInstanceVisibleErrorFeedback(instanceDomElement);
     };
 
     #handleControllerInstancesInit() {
@@ -219,7 +214,7 @@ export class App implements Architecture4App {
                 this.#DOMComponentInstances[instanceReg.uniqueId] = instanceReg;
             }
             else {
-                this.#reportInlineInitError(DOMComponent, `DOM Instance id "${instanceReg.uniqueId}" not unique`);
+                this.#reportInlineInitError(DOMComponent, `DOM Instance id "${instanceReg.uniqueId}" is not unique.`);
             }
         }
 
@@ -231,20 +226,23 @@ export class App implements Architecture4App {
             const controllerAlias = DOMComponent.getAttribute("jsvh-controller");
             const modularComponentSrc = DOMComponent.getAttribute("jsvh-modular-controller-src");
 
-            try {
-                const controller = this.#controllers[controllerAlias];
-                if (!controller && !modularComponentSrc) {
-                    this.#reportInlineInitError(DOMComponent);
-                    return;
-                }
-                if (!controller && modularComponentSrc) {
+
+            const controller = this.#controllers[controllerAlias];
+            if (!controller && !modularComponentSrc) {
+                this.#helper.console('error', `AppArchitecture: Instances controller "${controllerAlias}" is not registered in the webapp.`);
+                this.#helper.console('error', DOMComponent);
+                return;
+            }
+            if (!controller && modularComponentSrc) {
+                try {
                     this.#helper.addScriptFile(
                         modularComponentSrc,
                         () => {
                             const modularController =
                                 this.#controllers[controllerAlias];
                             if (!modularController) {
-                                this.#reportInlineInitError(DOMComponent);
+                                this.#helper.console('error', `AppArchitecture: Modular instances controller "${controllerAlias}" is not registered in the webapp.`);
+                                this.#helper.console('error', DOMComponent);
                                 return;
                             }
                             handleInstanceCreation(DOMComponent, modularController);
@@ -252,11 +250,11 @@ export class App implements Architecture4App {
                         `${controllerAlias}-script`,
                         document.head
                     );
-                } else {
-                    handleInstanceCreation(DOMComponent, controller);
+                } catch (error) {
+                    this.#reportInlineInitError(DOMComponent, error);
                 }
-            } catch (error) {
-                this.#reportInlineInitError(DOMComponent, error);
+            } else {
+                handleInstanceCreation(DOMComponent, controller);
             }
         });
     }
@@ -287,7 +285,7 @@ export class App implements Architecture4App {
     #emitCustomEvent(customEventName: string, data?: any, originId?: string) {
         //Block reserved app events
         switch (customEventName) {
-            case "AppPreInit":
+            case "AppBeforeInit":
             case "AppServicesInit":
             case "AppInit":
             case "ViewportVisibleInit":
@@ -323,28 +321,36 @@ export class App implements Architecture4App {
     }
 
     #customizeAppHelper(uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement): AppArchitectureHelper {
-        const logOnDebug = (content: any) => {
+        const logOnDebug = (content: any, trace = true) => {
             if (this.#debugMode) {
-                this.#helper.console('log', `⬇️ DEBUG FROM: ${uniqueAlias} (${controllerType}) ⬇️`);
+                this.#helper.console('log', `⬇️ DEBUG LOG FROM: ${uniqueAlias} (${AppComponentType[controllerType]}) ⬇️`);
                 this.#helper.console('log', content);
-                console.trace();
+                if (trace) {
+                    console.trace();
+                }
+                this.#helper.console('log', `END OF DEBUG LOG`);
             }
         }
-        const warnOnDebug = (content: any) => {
+        const warnOnDebug = (content: any, trace = true) => {
             if (this.#debugMode) {
-                this.#helper.console('warn', `⬇️ DEBUG WARN FROM: ${uniqueAlias} (${controllerType}) ⬇️`);
+                this.#helper.console('warn', `⬇️ DEBUG WARN FROM: ${uniqueAlias} (${AppComponentType[controllerType]}) ⬇️`);
                 this.#helper.console('warn', content);
-                console.trace();
+                if (trace) {
+                    console.trace();
+                }
+                this.#helper.console('warn', `END OF DEBUG WARN`);
             }
         }
         const reportError = (message: string, content?: any) => {
             if (this.#debugMode) {
-                this.#helper.console('error', `🟥 ${uniqueAlias} (${controllerType}) REPORTED AN ERROR 🟥`);
+                this.#helper.console('error', `🟥 ${uniqueAlias} (${AppComponentType[controllerType]}) REPORTED AN ERROR 🟥`);
                 this.#helper.console('error', message);
                 if (content) {
                     this.#helper.console('error', content);
                 }
-                console.trace();
+                if (instanceRootDOMElement) {
+                    this.#domInstanceVisibleErrorFeedback(instanceRootDOMElement);
+                }
             }
             else {
                 document.body.setAttribute("jsvh-error-has-occurred", "yes");
@@ -369,17 +375,17 @@ export class App implements Architecture4App {
 
             const handleAppEventFeedback = (data: any, originId: any) => {
                 if (this.#debugMode) {
-                    this.#helper.console('log', `🪃⬇️ ${uniqueAlias} (${AppComponentType[controllerType]}) has received the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} subscription. | ${new Date().toISOString()}`);
+                    this.#helper.console('log', `🪃⬇️ ${uniqueAlias} (${AppComponentType[controllerType]}) has received the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} event subscription. | ${new Date().toISOString()}`);
                 }
                 try {
                     callback(data, originId);
                     if (this.#debugMode) {
-                        this.#helper.console('log', `🪃✅ ${uniqueAlias} (${AppComponentType[controllerType]}) completed the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} subscription. | ${new Date().toISOString()}`);
+                        this.#helper.console('log', `🪃✅ ${uniqueAlias} (${AppComponentType[controllerType]}) completed the ${appEventName}${targetId ? ` ~ ${targetId}` : ""} event subscription. | ${new Date().toISOString()}`);
                     }
                     this.#emitAppEvent(`${appEventName}%`, uniqueAlias);
                 }
                 catch (err) {
-                    this.#reportUncontrolledError(uniqueAlias, controllerType, err);
+                    this.#reportUncontrolledError(uniqueAlias, controllerType, err, instanceRootDOMElement ?? null);
                     this.#emitAppEvent(`${appEventName}/`, uniqueAlias);
                     if (isDOMInstanceController && this.#config.errorManagement?.hideCrashedDOMInstancesWhileRunning) {
                         instanceRootDOMElement.style.display = "none";
@@ -391,7 +397,7 @@ export class App implements Architecture4App {
             if (appEventName === "ViewportVisibleInit" && isDOMInstanceController) {
                 this.#helper.onViewportVisibleOnce(() => {
                     handleAppEventFeedback(null, null);
-                }, { root: null, rootMargin: "0px", threshold: 1.0 }, instanceRootDOMElement);
+                }, { root: null, rootMargin: "0px", threshold: 0.1 }, instanceRootDOMElement);
             }
             else {
                 if (appEventName === "AppServicesInit" && controllerType === AppComponentType.Service) {
@@ -403,6 +409,68 @@ export class App implements Architecture4App {
                 }, targetId)
             }
         }
+
+        const useVendor = (vendorUniqueName: string, callback: () => any, appEventInitMethod = "", lazyVendorLoad = true) => {
+            if (!appEventInitMethod) {
+                const vendorLoader = this.#appHelper.getService("vendorLoader") as EmbeddedVendorLoaderService;
+                vendorLoader.requestVendorLoad(vendorUniqueName, () => {
+                    if (this.#debugMode) {
+                        this.#helper.console('log', `🧱✅ ${uniqueAlias} (${AppComponentType[controllerType]}) used vendor "${vendorUniqueName}" | ${new Date().toISOString()}`);
+                    }
+                    callback();
+                })
+            }
+            else {
+                if (lazyVendorLoad) {
+                    subscribe(appEventInitMethod, () => {
+                        const vendorLoader = this.#appHelper.getService("vendorLoader") as EmbeddedVendorLoaderService;
+                        vendorLoader.requestVendorLoad(vendorUniqueName, () => {
+                            if (this.#debugMode) {
+                                this.#helper.console('log', `🧱✅ ${uniqueAlias} (${AppComponentType[controllerType]}) used vendor "${vendorUniqueName}" (combined init) | ${new Date().toISOString()}`);
+                            }
+                            callback();
+                        })
+                    })
+                }
+                else {
+                    subscribeToAll([{ appEventName: `${vendorUniqueName}VendorLoad` }, { appEventName: appEventInitMethod }], callback);
+                    const vendorLoader = this.#appHelper.getService("vendorLoader") as EmbeddedVendorLoaderService;
+                    vendorLoader.requestVendorLoad(vendorUniqueName);
+                }
+            }
+        }
+
+        const subscribeToAll = (appEvents: Array<{ appEventName: string, targetId?: string }>, callback: (data: Array<any>, originId: Array<string>) => any) => {
+            const events = appEvents.reduce((eventsIndex, appEvent) => {
+                eventsIndex[appEvent.appEventName] = { ...appEvent, completed: false, data: null, originId: "" };
+                return eventsIndex;
+            }, {}) as Array<{ appEventName: string, targetId?: string, completed: boolean, data: any, originId: string }>;
+
+            const doCallbackIfMeetConditions = () => {
+                const eventsArray = Object.values(events);
+                const conditionsMeet = eventsArray.reduce((meetConditions, appEvent) => {
+                    return meetConditions && appEvent.completed
+                }, true)
+
+                if (conditionsMeet) {
+                    const eventsData = eventsArray.flatMap(appEvent => appEvent.data);
+                    const eventsOriginId = eventsArray.flatMap(appEvent => appEvent.originId);
+                    callback(eventsData, eventsOriginId);
+                    if (this.#debugMode) {
+                        this.#helper.console('log', `🪃🪃✅ ${uniqueAlias} (${AppComponentType[controllerType]}) completed a multiple event subscription. | ${new Date().toISOString()}`);
+                    }
+                }
+            }
+
+            appEvents.forEach((appEvent) => {
+                subscribe(appEvent.appEventName, (data, originId) => {
+                    const indexedEvent = events[appEvent.appEventName];
+                    events[appEvent.appEventName] = { ...indexedEvent, completed: true, data, originId };
+                    doCallbackIfMeetConditions();
+                }, appEvent.targetId)
+            });
+        }
+
         const whoIam = () => {
             return {
                 aliasOrId: uniqueAlias,
@@ -427,7 +495,8 @@ export class App implements Architecture4App {
                 alias,
                 value,
                 readOnly: !!readOnly,
-                scope: scope ? [...uniqueAlias, ...scope] : null
+                scope: scope ? [...uniqueAlias, ...scope] : null,
+                creatorId: uniqueAlias
             };
             this.#emitAppEvent(`ContextVarChange_${alias}`)
         }
@@ -450,7 +519,7 @@ export class App implements Architecture4App {
 
 
         const getRootDOMElement = instanceRootDOMElement ? () => instanceRootDOMElement : this.#appHelper.getRootDOMElement;
-        return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, getRootDOMElement, whoIam, emit, getContextVar, setContextVar };
+        return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, subscribeToAll, getRootDOMElement, whoIam, emit, getContextVar, setContextVar, useVendor };
     }
 
     #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => any)) {
@@ -475,10 +544,14 @@ export class App implements Architecture4App {
         }
     }
 
-    #reportUncontrolledError(uniqueAlias: string, controllerType: AppComponentType, error: any) {
+    #reportUncontrolledError(uniqueAlias: string, controllerType: AppComponentType, error: any, instanceRootDOMElement?: HTMLElement) {
         if (this.#debugMode) {
-            this.#helper.console('error', `🟥 ${uniqueAlias} (${controllerType}) THROWED AN UNCONTROLLED ERROR 🟥`);
+            this.#helper.console('error', `🟥 ${uniqueAlias} (${AppComponentType[controllerType]}) THROWED AN UNCONTROLLED ERROR 🟥`);
             this.#helper.console('error', error);
+            this.#helper.console('error', `END OF UNCONTROLLED ERROR REPORT`);
+            if (instanceRootDOMElement) {
+                this.#domInstanceVisibleErrorFeedback(instanceRootDOMElement);
+            }
         }
         else {
             document.body.setAttribute("jsvh-error-has-occurred", "yes");
@@ -511,7 +584,7 @@ export class App implements Architecture4App {
 
         if (this.#debugMode) {
             console.log(
-                `JSVanillaHelper APP Architecture ${this.#version} is in verbose & debug mode 🧯`
+                `JSVanillaHelper AppArchitecture ${this.#version} is in verbose & debug mode 🧯`
             );
             console.log(`💽 ${this.#id.alias} | Unique ID [${this.#id.uniqueId}] | Build Number [${this.#id.buildNumber ?? "Unknown"}]`);
         }
@@ -534,7 +607,9 @@ export class App implements Architecture4App {
             }
         });
         this.#awaitServicesInitialization().then(() => {
-            this.#helper.console("log", "Services initialization completed ✅");
+            if (this.#debugMode) {
+                this.#helper.console("log", "Services initialization completed ✅");
+            }
             this.#handleControllerInstancesInit();
             this.#emitAppEvent("AppInit");
             this.#architectureData.appInitEventFired = true;

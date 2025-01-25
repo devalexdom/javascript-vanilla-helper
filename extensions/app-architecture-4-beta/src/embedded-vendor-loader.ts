@@ -10,11 +10,13 @@ export interface EmbeddedVendorLoaderServiceConfig {
 export class EmbeddedVendorLoaderService {
     #config: EmbeddedVendorLoaderServiceConfig;
     #appHelper: AppArchitectureHelper;
+    #vendors: { [key: string]: VendorLoadConfiguration }
     constructor(appHelper: AppArchitectureHelper) {
         this.#appHelper = appHelper;
         this.#config = {
             vendors: []
         };
+        this.#vendors = {};
 
         const customConfig = appHelper.getConfig("vendorLoader");
 
@@ -27,21 +29,30 @@ export class EmbeddedVendorLoaderService {
     }
 
     #init() {
+        this.#vendors = this.#config.vendors.reduce((vendorsIndex, vendor) => {
+            vendorsIndex[vendor.uniqueName] = { ...vendor, requested: false, loaded: false };
+            return vendorsIndex;
+        }, {});
         this.#config.vendors.forEach((vendor) => {
             this.#handleVendorLoad(vendor);
         });
     }
 
-    requestVendorLoad(triggerClass = '', loadCallback = () => { }) {
-        this.#config.vendors.forEach((vendor) => {
-            if (vendor.triggerClass === triggerClass && !vendor.loaded) {
+    requestVendorLoad(uniqueName: string, loadCallback = () => { }) {
+        const vendor = this.#vendors[uniqueName];
+        if (vendor) {
+            if (!vendor.loaded) {
                 vendor.requested = true;
                 this.#handleVendorLoad(vendor);
-                window.addEventListener(vendor.loadEventName, loadCallback);
-            } else if (vendor.triggerClass === triggerClass && vendor.loaded) {
+                window.addEventListener(vendor.loadEventName ?? `VendorLoader_${uniqueName}_Load`, loadCallback);
+            }
+            else {
                 loadCallback();
             }
-        });
+        }
+        else {
+            this.#appHelper.reportError(`No vendor with unique name "${uniqueName}" found.`, null);
+        }
     }
 
     #isVendorConflicted(vendor: VendorLoadConfiguration) {
@@ -55,13 +66,9 @@ export class EmbeddedVendorLoaderService {
             if (document.getElementsByClassName(vendor.triggerClass).length > 0 || vendor.requested) {
                 const { V } = this.#appHelper;
                 const onLoadFunc = () => {
-                    if (this.#appHelper.getContextVar("isAppInDebugMode")) {
-                        V().console(
-                            'log',
-                            `🧱 Vendor ${vendor.scriptPath} ${vendor.requested ? "loaded by request." : "loaded by trigger CSS class."}`
-                        );
-                    }
-                    V(window).dispatchEvent(vendor.loadEventName);
+                    this.#appHelper.logOnDebug(`🧱 Vendor ${vendor.scriptPath} ${vendor.requested ? "loaded by request." : "loaded by trigger CSS class."}`, false);
+                    this.#appHelper.emit(`${vendor.uniqueName}VendorLoad`);
+                    V(window).dispatchEvent(vendor.loadEventName ?? `VendorLoader_${vendor.uniqueName}_Load`);
                     vendor.loaded = true;
                 };
                 if (!document.getElementById(`${vendor.triggerClass}-script`)) {

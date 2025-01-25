@@ -8,7 +8,7 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
     helper: JSVanillaHelper;
     constructor() {
         this.extensionName = 'AppArchitecture';
-        this.version = 4.01;
+        this.version = 4.03;
     }
 
     extendHelperInstance(helper) {
