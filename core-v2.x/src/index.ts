@@ -49,7 +49,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.3;
+    this.version = 2.32;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
     this.buildType = 2;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -718,19 +718,33 @@ export class JSVanillaHelper {
     else if (t) {
       observer.observe(t);
     }
+
+    const stopObserver = () => {
+      if (Array.isArray(t) || NodeList.prototype.isPrototypeOf(t)) {
+        [...<[]>t].forEach(element => { observer.unobserve(element); });
+      }
+      else if (t) {
+        observer.unobserve(t);
+      }
+    }
+
+    return {
+      stopObserver,
+      getObserver: () => observer
+    }
   }
 
   traceViewportVisibility(isVisibleCallback = (element: HTMLElement) => { }, isHiddenCallback = (element: HTMLElement) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
     const observer = new IntersectionObserver(function (entries, self) {
       entries.forEach(entry => {
         const isIntersecting = entry.isIntersecting;
-        const wasIntersecting = !!entry.target["jsvh_isIntersecting"];
+        const wasIntersecting = entry.target["jsvh_isIntersecting"] ?? null;
 
         if (isIntersecting && !wasIntersecting) {
           entry.target["jsvh_isIntersecting"] = true;
           isVisibleCallback(entry.target as HTMLElement);
         }
-        else if (!isIntersecting && wasIntersecting) {
+        else if (!isIntersecting && (wasIntersecting || wasIntersecting === null)) {
           entry.target["jsvh_isIntersecting"] = false;
           isHiddenCallback(entry.target as HTMLElement);
         }
@@ -742,6 +756,20 @@ export class JSVanillaHelper {
     }
     else if (t) {
       observer.observe(t);
+    }
+
+    const stopObserver = () => {
+      if (Array.isArray(t) || NodeList.prototype.isPrototypeOf(t)) {
+        [...<[]>t].forEach(element => { observer.unobserve(element); });
+      }
+      else if (t) {
+        observer.unobserve(t);
+      }
+    }
+
+    return {
+      stopObserver,
+      getObserver: () => observer
     }
   }
 
