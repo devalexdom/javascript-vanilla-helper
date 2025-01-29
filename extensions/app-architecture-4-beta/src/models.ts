@@ -46,6 +46,7 @@ export interface ArchitectureData {
 export interface VendorLoadConfiguration {
     uniqueName: string;
     triggerClass: string;
+    lazyLoad?: boolean;
     conflictTriggerClass: Array<string>;
     scriptPath: string;
     loadEventName: string;

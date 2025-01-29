@@ -19,7 +19,7 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
-        this.#version = "4.0.3 beta";
+        this.#version = "4.0.4 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
@@ -107,7 +107,7 @@ export class App implements Architecture4App {
 
     registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerClass) {
-            console.error("AppArchitecture: Unable to register controller, unique alias and controllerClass are expected parameters.");
+            console.error(`AppArchitecture: Unable to register controller, unique alias (${uniqueAlias}) and controllerClass are expected parameters.`);
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
@@ -129,7 +129,7 @@ export class App implements Architecture4App {
 
     registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerFunction) {
-            console.error("AppArchitecture: Unable to register controller, unique alias and controllerFunction are expected parameters.");
+            console.error(`AppArchitecture: Unable to register controller, unique alias (${uniqueAlias}) and controllerFunction are expected parameters.`);
             return
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
@@ -151,7 +151,7 @@ export class App implements Architecture4App {
 
     registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !serviceControllerClass) {
-            console.error("AppArchitecture: Unable to register service, unique alias and serviceControllerClass are expected parameters.")
+            console.error(`AppArchitecture: Unable to register service, unique alias (${uniqueAlias}) and serviceControllerClass are expected parameters.`)
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
@@ -164,7 +164,7 @@ export class App implements Architecture4App {
 
     registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerClass) {
-            console.error("AppArchitecture: Unable to register instances controller, unique alias and instanceControllerClass are expected parameters.");
+            console.error(`AppArchitecture: Unable to register instances controller, unique alias (${uniqueAlias}) and instanceControllerClass are expected parameters.`);
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {
@@ -177,7 +177,7 @@ export class App implements Architecture4App {
 
     registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerFunction) {
-            console.error("AppArchitecture: Unable to register instances controller, unique alias and instanceControllerFunction are expected parameters.");
+            console.error(`AppArchitecture: Unable to register instances controller, unique alias (${uniqueAlias}) and instanceControllerFunction are expected parameters.`);
             return;
         }
         if (this.#controllers[uniqueAlias] || this.#controllersToRegister[uniqueAlias] || this.#services[uniqueAlias] || this.#servicesToRegister[uniqueAlias]) {

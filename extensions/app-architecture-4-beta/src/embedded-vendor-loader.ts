@@ -63,22 +63,32 @@ export class EmbeddedVendorLoaderService {
 
     #handleVendorLoad(vendor: VendorLoadConfiguration) {
         if (!this.#isVendorConflicted(vendor)) {
-            if (document.getElementsByClassName(vendor.triggerClass).length > 0 || vendor.requested) {
-                const { V } = this.#appHelper;
-                const onLoadFunc = () => {
-                    this.#appHelper.logOnDebug(`🧱 Vendor ${vendor.scriptPath} ${vendor.requested ? "loaded by request." : "loaded by trigger CSS class."}`, false);
-                    this.#appHelper.emit(`${vendor.uniqueName}VendorLoad`);
-                    V(window).dispatchEvent(vendor.loadEventName ?? `VendorLoader_${vendor.uniqueName}_Load`);
-                    vendor.loaded = true;
-                };
-                if (!document.getElementById(`${vendor.triggerClass}-script`)) {
-                    V(document.head).addScriptFile(
-                        vendor.scriptPath,
-                        onLoadFunc,
-                        `${vendor.triggerClass}-script`
-                    );
-                }
+            const vendorTriggerClass = [...document.getElementsByClassName(vendor.triggerClass)];
+            if (vendorTriggerClass.length > 0 && !vendor.lazyLoad || vendor.requested) {
+                this.#loadVendor(vendor);
             }
+            else if (vendorTriggerClass.length > 0 && vendor.lazyLoad && !vendor.requested) {
+                this.#appHelper.V(vendorTriggerClass).onViewportVisibleOnce(() => {
+                    this.#loadVendor(vendor);
+                }, { root: null, rootMargin: "0px", threshold: 0.1 })
+            }
+        }
+    }
+
+    #loadVendor(vendor: VendorLoadConfiguration) {
+        const { V } = this.#appHelper;
+        const onLoadFunc = () => {
+            this.#appHelper.logOnDebug(`🧱 Vendor ${vendor.scriptPath} ${vendor.requested ? "loaded by request." : `loaded ${vendor.lazyLoad ? "lazy" : ""} by CSS class trigger.`}`, false);
+            this.#appHelper.emit(`${vendor.uniqueName}VendorLoad`);
+            V(window).dispatchEvent(vendor.loadEventName ?? `VendorLoader_${vendor.uniqueName}_Load`);
+            vendor.loaded = true;
+        };
+        if (!document.getElementById(`${vendor.triggerClass}-script`)) {
+            V(document.head).addScriptFile(
+                vendor.scriptPath,
+                onLoadFunc,
+                `${vendor.triggerClass}-script`
+            );
         }
     }
 }

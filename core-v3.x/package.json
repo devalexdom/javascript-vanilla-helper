@@ -1,7 +1,7 @@
 {
-  "name": "jsvanillahelper-apparchitecture-beta",
-  "version": "4.0.4",
-  "description": "[Beta version] Extension to create a high-performance, lightweight, reliable, easy to develop and maintain web application based on vanilla JavaScript",
+  "name": "jsvanillahelper-core",
+  "version": "3.0.0",
+  "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -14,23 +14,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper.git"
+    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v3.x"
   },
   "keywords": [
     "javascript",
     "vanilla",
     "helper",
-    "multiple",
+    "typescript",
     "jsvanillahelper",
     "webapp",
-    "instances",
+    "lightweight",
     "performance",
-    "components",
-    "modules",
-    "framework",
-    "lazyload",
-    "extension",
-    "scope"
+    "framework"
   ],
   "author": "Àlex Domínguez",
   "license": "MIT",
@@ -38,9 +33,6 @@
     "url": "https://github.com/devalexdom/javascript-vanilla-helper/issues"
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
-  "dependencies": {
-    "jsvanillahelper-core": "^3.0.0"
-  },
   "devDependencies": {
     "@babel/core": "^7.26.7",
     "@rollup/plugin-babel": "^6.0.4",
