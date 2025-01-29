@@ -49,7 +49,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 3.0;
+    this.version = 3.01;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v3.x";
     this.buildType = 1;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -400,11 +400,14 @@ export class JSVanillaHelper {
     t.appendChild(meta);
   }
 
-  addScriptFile(src = '', onload = (e?: Event) => { }, id = '', t: any = this.t) {
+  addScriptFile(src: string, onload = (e?: Event) => { }, id = '', attributes: Array<{ name: string, value: string }> = [], t: any = this.t) {
     const scriptEl = document.createElement('script');
     scriptEl.src = src;
     scriptEl.id = id;
     scriptEl.onload = onload;
+    attributes.forEach(attribute => {
+      scriptEl.setAttribute(attribute.name, attribute.value);
+    });
     t.appendChild(scriptEl);
   }
 

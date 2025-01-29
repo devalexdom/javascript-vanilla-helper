@@ -105,7 +105,10 @@ export declare class JSVanillaHelper {
     addClass(className: any, t?: any): this;
     addClasses(classNames?: any[], t?: any): this;
     addMeta(name?: string, content?: string, t?: any): void;
-    addScriptFile(src?: string, onload?: (e?: Event) => void, id?: string, t?: any): void;
+    addScriptFile(src: string, onload?: (e?: Event) => void, id?: string, attributes?: Array<{
+        name: string;
+        value: string;
+    }>, t?: any): void;
     addStyleInline(css?: string, t?: any): void;
     isScriptLoaded(src?: string): boolean;
     delayFunc(): (callback: any, ms: any) => void;
