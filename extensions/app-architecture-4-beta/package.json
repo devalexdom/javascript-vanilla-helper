@@ -1,7 +1,7 @@
 {
-  "name": "jsvanillahelper-core-legacy",
-  "version": "2.3.3",
-  "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
+  "name": "jsvanillahelper-apparchitecture-beta",
+  "version": "4.0.4",
+  "description": "[Beta version] Extension to create a high-performance, lightweight, reliable, easy to develop and maintain web application based on vanilla JavaScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -14,18 +14,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x"
+    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper.git"
   },
   "keywords": [
     "javascript",
     "vanilla",
     "helper",
-    "typescript",
+    "multiple",
     "jsvanillahelper",
     "webapp",
-    "lightweight",
+    "instances",
     "performance",
-    "framework"
+    "components",
+    "modules",
+    "framework",
+    "lazyload",
+    "extension",
+    "scope"
   ],
   "author": "Àlex Domínguez",
   "license": "MIT",
@@ -34,15 +39,16 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "dependencies": {
-    "rollup": "^4.19.1",
-    "rollup-plugin-typescript2": "^0.36.0"
+    "jsvanillahelper-core": "^3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.9",
+    "@babel/core": "^7.26.7",
     "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-commonjs": "^26.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/node": "^20.14.12",
-    "typescript": "^5.5.4"
+    "@types/node": "^20.17.16",
+    "rollup": "^4.32.1",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.7.3"
   }
 }

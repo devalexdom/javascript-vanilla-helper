@@ -49,8 +49,8 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.33;
-    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
+    this.version = 3.0;
+    this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v3.x";
     this.buildType = 1;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
     this.t = target;
@@ -124,28 +124,6 @@ export class JSVanillaHelper {
     return t.querySelectorAll(query);
   }
 
-  hasOverflow(queryChildrens: string = '', overflowCallback = (el) => { }, t: HTMLElement = this.t): boolean {
-    let overflow = 0;
-    const isOverflown = ({
-      clientWidth,
-      clientHeight,
-      scrollWidth,
-      scrollHeight,
-    }) => {
-      return scrollHeight > clientHeight || scrollWidth > clientWidth;
-    };
-    if (queryChildrens) {
-      const currentChildrens = t.querySelectorAll(queryChildrens);
-      this.forEach((child) => {
-        if (isOverflown(child)) {
-          overflowCallback(child);
-          overflow |= 1;
-        }
-      }, currentChildrens);
-    }
-    return !(!overflow);
-  }
-
   findElementIn(parent: HTMLElement, t: any = this.t): Element {
     const descendants = Array.from(parent.querySelectorAll('*'));
     return descendants.find((el) => el === t);
@@ -156,49 +134,6 @@ export class JSVanillaHelper {
       window.getComputedStyle(t).fontSize.replace('px', '')
     );
     t.style.fontSize = `${fontSize + pixelsIn}px`;
-  }
-
-  setMaxViewportScale(maximumScale: string = '', initialScale: string = '1.0'): JSVanillaHelper {
-    const maxScale = maximumScale
-      ? `, maximum-scale=${maximumScale}`
-      : '';
-    const userScalable =
-      maximumScale === initialScale ? ', user-scalable=no' : '';
-    const vMetaContent = `width=device-width, initial-scale=${initialScale}${maxScale}${userScalable}`;
-    const viewportMeta = document.querySelector('meta[name=viewport]');
-    if (viewportMeta) {
-      viewportMeta.setAttribute("content", vMetaContent);
-    } else {
-      this.addMeta('viewport', vMetaContent, document.head);
-    }
-    if (maximumScale === initialScale) {
-      this.preventNativeTouchGestures(true, document);
-    } else {
-      this.preventNativeTouchGestures(false, document);
-    }
-    return this;
-  }
-
-  preventNativeTouchGestures(prevent: boolean = true, t: any = this.t): void {
-    if (!this.hData.reg.pNTouchGesturesHelperFunc) {
-      this.hData.reg.pNTouchGesturesHelperFunc = (e) => {
-        e.preventDefault();
-      };
-    }
-    const listenerOptions = { passive: false };
-    if (prevent) {
-      t.addEventListener(
-        'touchmove',
-        this.hData.reg.pNTouchGesturesHelperFunc,
-        listenerOptions
-      );
-    } else {
-      t.removeEventListener(
-        'touchmove',
-        this.hData.reg.pNTouchGesturesHelperFunc,
-        listenerOptions
-      );
-    }
   }
 
   getData(t: any = this.t): object {
@@ -228,20 +163,6 @@ export class JSVanillaHelper {
     window.scrollTo({ top: y, behavior: behavior });
   }
 
-  getItemsCountPerRow(t: any = this.t): number {
-    let lastXPos = 0;
-    let itemsCount = 0;
-    for (const item of t) {
-      const itemXPos = item.getBoundingClientRect().top;
-      if (itemXPos !== lastXPos && lastXPos !== 0) {
-        return itemsCount;
-      }
-
-      lastXPos = itemXPos;
-      itemsCount++;
-    }
-  }
-
   scrollContainerToTarget(
     { yOffset = 0, xOffset = 0, behavior = 'smooth' },
     parentEl = null,
@@ -251,10 +172,6 @@ export class JSVanillaHelper {
     const y = t.offsetTop + yOffset;
     const x = t.offsetLeft + xOffset;
     containerEl.scrollTo({ top: y, left: x, behavior });
-  }
-
-  onFalseEmptyString(t: any = this.t): string {
-    return !t ? '' : t;
   }
 
   isIterable(t: any = this.t): boolean {
@@ -300,10 +217,6 @@ export class JSVanillaHelper {
       t.addEventListener(eventName, callback, false);
     }, eventName);
     return this;
-  }
-
-  $$(newScope: Function): void {
-    newScope(new JSVanillaHelper(this.t, this.tData));
   }
 
   get(index?: number): any {
@@ -362,32 +275,6 @@ export class JSVanillaHelper {
     return this;
   }
 
-  getTextRenderedSize(font: string = '16px Arial', widthLimit: number = 0, t: any = this.t): object {
-    // Max font-size will only work in px
-    const changeFontSize = (newSize, contextFont) => {
-      return (contextFont = contextFont.replace(/\d+px/, newSize));
-    };
-    const textEl = document.createElement('canvas');
-    const context = textEl.getContext('2d');
-    context.font = font;
-    const textMesure = context.measureText(t);
-    const height =
-      textMesure.actualBoundingBoxAscent + textMesure.actualBoundingBoxDescent;
-
-    let maxFontSizePX = parseFloat(font.match(/\d+px/)[0].replace('px', ''));
-    if (widthLimit > 0) {
-      while (context.measureText(t).width > widthLimit && maxFontSizePX > 0) {
-        maxFontSizePX--;
-        context.font = changeFontSize(`${maxFontSizePX}px`, context.font);
-      }
-    }
-    return { width: textMesure.width, height, maxFontSizePX };
-  }
-
-  getFontUsed(property: string = 'font', t: any = this.t): string {
-    return this.getRenderedStyle(property, t);
-  }
-
   getRenderedStyle(property: string = 'color', t: any = this.t): string {
     const computedStyle = window.getComputedStyle(t, null);
     return computedStyle.getPropertyValue(property);
@@ -398,43 +285,12 @@ export class JSVanillaHelper {
     return this;
   }
 
-  whileEach(iteration: Function, t: any = this.t): JSVanillaHelper {
-    const iterableLength = t.length;
-    let i = 0;
-    let loop = true;
-    const stop = () => {
-      loop = false;
-      return t[i];
-    };
-    while (loop && i < iterableLength) {
-      iteration(t[i], i, stop);
-      i++;
-    }
-    return this;
-  }
-
-  reverseEach(iteration: Function, t: any = this.t): JSVanillaHelper {
-    let i = t.length;
-    while (i--) {
-      iteration(t[i], i);
-    }
-    return this;
-  }
-
   eachOne(helperFunction: string = '', args = []): void {
     const newInstance = new JSVanillaHelper();
     this.forEach((item) => {
       newInstance.setTarget(item);
       newInstance[helperFunction].apply(newInstance, args);
     }, this.t);
-  }
-
-  waitFor(timeInMs: number = 0, helperFunction: string = '', args = []): JSVanillaHelper {
-    const newInstance = new JSVanillaHelper(this.t, this.tData);
-    setTimeout(() => {
-      newInstance[helperFunction].apply(newInstance, args);
-    }, timeInMs);
-    return this;
   }
 
   objForEach(iteration: Function, t: any = this.t): JSVanillaHelper {
@@ -459,35 +315,32 @@ export class JSVanillaHelper {
     return this;
   }
 
-  addBrowserClass(t: any = this.t): void {
-    t.classList.add(this.detectBrowser());
+  URL(t: any = this.t) {
+    return this.setTarget(new URL(t));
   }
 
-  detectBrowser(): string {
-    const uA = navigator.userAgent;
-    if (uA.includes('Edge')) {
-      return 'ms-edge';
-    }
-    if (uA.includes('Edg')) {
-      return 'ms-edge-chromium';
-    }
-    if (uA.includes('Chrome')) {
-      return 'chrome';
-    }
-    if (uA.includes('Safari') && !uA.includes('Chrome')) {
-      return 'safari';
-    }
-    if (uA.includes('Firefox')) {
-      return 'firefox';
-    }
-    if (uA.includes('MSIE') || !!uA.match(/Trident.*rv\:11\./)) {
-      return 'ms-ie';
-    }
-    return 'other-browser';
+  addGetParameter(name: string, value: string, t: URL = this.t) {
+    t.searchParams.append(name, value);
+    return this;
   }
 
-  nextQuerySign(t: any = this.t) {
-    return t.includes('?') ? '&' : '?';
+  addGetParameters(parameters: Array<{ name: string, value: string }>, t: URL = this.t) {
+    for (let i = 0; i < parameters.length; i++) {
+      t.searchParams.append(parameters[i].name, parameters[i].value);
+    }
+    return this;
+  }
+
+  removeGetParameter(name: string, t: URL = this.t) {
+    t.searchParams.delete(name);
+    return this;
+  }
+
+  removeGetParameters(parameters: Array<{ name: string, value?: string }>, t: URL = this.t) {
+    for (let i = 0; i < parameters.length; i++) {
+      t.searchParams.delete(parameters[i].name);
+    }
+    return this;
   }
 
   newElement(t: string = this.t): JSVanillaHelper {
@@ -509,7 +362,7 @@ export class JSVanillaHelper {
   }
 
   firstOrDefault(arrayObj = this.t) {
-    if (arrayObj.length > 0) {
+    if (arrayObj?.length > 0) {
       return arrayObj[0];
     }
     return null;
@@ -526,7 +379,7 @@ export class JSVanillaHelper {
   }
 
   hideIn(timeInMs = 0, t: any = this.t) {
-    this.waitFor(timeInMs, 'hide', [t]);
+    setTimeout(() => this.hide(t), timeInMs);
     return this;
   }
 
@@ -605,7 +458,6 @@ export class JSVanillaHelper {
     return t.classList.contains(className);
   }
 
-  /* The correct implementation is to use Logical OR assignment (||=) but is not supported on Safari < 14 and generates critical syntax error. */
   hasClasses(classNamesArr = [], t: any = this.t) {
     return !(!classNamesArr.reduce((has, item) => {
       return has |= t.classList.contains(item);
@@ -617,17 +469,6 @@ export class JSVanillaHelper {
       t.removeChild(t.firstChild);
     }
     return this;
-  }
-
-  /* Nullable helper method, V(obj).N('maybeUndefinedProperty') equals to obj?.maybeUndefinedProperty */
-  N(objPropertyStr, t: any = this.t) {
-    if (!t) {
-      return null;
-    }
-    if (typeof t[objPropertyStr] === 'undefined') {
-      return null;
-    }
-    return t[objPropertyStr];
   }
 
   sortArrayByProperty(property = '', order = 1, t: any = this.t) {
@@ -663,42 +504,25 @@ export class JSVanillaHelper {
     observer.observe(t, observerParameters);
   }
 
-  resizeObserver(onResize, t: any = this.t) {
+  resizeObserver(onResize: (helper: JSVanillaHelper) => void, t: any = this.t) {
     const initialClientRect = t.getBoundingClientRect();
     let lastClientRect = initialClientRect;
-    if (typeof ResizeObserver === 'function') {
-      const nativeResizeObserver = new ResizeObserver((entries) => {
-        const clientRect = t.getBoundingClientRect();
-        if (
-          lastClientRect.width !== clientRect.width ||
-          lastClientRect.height !== clientRect.height
-        ) {
-          // To avoid false positive on observation start
-          lastClientRect = clientRect;
-          this.tData = {
-            initialClientRect,
-            clientRect,
-          };
-          onResize(this);
-        }
-      });
-      nativeResizeObserver.observe(t);
-    } else {
-      window.addEventListener('resize', () => {
-        const clientRect = t.getBoundingClientRect();
-        if (
-          lastClientRect.width !== clientRect.width ||
-          lastClientRect.height !== clientRect.height
-        ) {
-          lastClientRect = clientRect;
-          this.tData = {
-            initialClientRect,
-            clientRect,
-          };
-          onResize(this);
-        }
-      });
-    }
+    const nativeResizeObserver = new ResizeObserver((entries) => {
+      const clientRect = t.getBoundingClientRect();
+      if (
+        lastClientRect.width !== clientRect.width ||
+        lastClientRect.height !== clientRect.height
+      ) {
+        // To avoid false positive on observation start
+        lastClientRect = clientRect;
+        this.tData = {
+          initialClientRect,
+          clientRect,
+        };
+        onResize(this);
+      }
+    });
+    nativeResizeObserver.observe(t);
   }
 
   onViewportVisibleOnce(isVisibleCallback = (element: HTMLElement, elementIndex: number) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
@@ -806,82 +630,24 @@ export class JSVanillaHelper {
     return !(t.getAttribute(AttributeName) == null);
   }
 
-  isVisible(verticalOffset = 0, t: any = this.t) {
-    return this.getVisibilityData(verticalOffset, t).visible;
+  isVisible(partiallyVisible = true, t: any = this.t) {
+    const { top, left, bottom, right } = t.getBoundingClientRect();
+    const { innerHeight, innerWidth } = window;
+    return partiallyVisible
+      ? ((top > 0 && top < innerHeight) ||
+        (bottom > 0 && bottom < innerHeight)) &&
+      ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+      : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
   }
 
-  isRendered(verticalOffset = 0, t: any = this.t) {
-    return this.getVisibilityData(verticalOffset, t).rendered;
-  }
-
-  isElementBound(child, padding, t: any = this.t) {
-    return (
-      t.getBoundingClientRect().right >=
-      child.getBoundingClientRect().right + padding
-    ); // helper t as parent
-  }
-
-  getVisibilityData(verticalOffset = 0, t: any = this.t) {
-    let visible = false;
-    let rendered = false;
-    const cR = t.getBoundingClientRect();
-    const windowHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const windowWidth =
-      window.innerWidth || document.documentElement.clientWidth;
-    if (!(cR.height == 0 && cR.width == 0 && cR.top == 0 && cR.left == 0)) {
-      rendered = true;
-      const vertInView =
-        cR.top - verticalOffset <= windowHeight &&
-        cR.top + cR.height + verticalOffset >= 0;
-      const horInView = cR.left <= windowWidth && cR.left + cR.width >= 0;
-      visible = vertInView && horInView;
-    }
-
-    this.tData.rendered = rendered;
-    this.tData.visible = visible;
-    this.tData.clientRect = cR;
-
-    return this.tData;
-  }
-
-  addAnimation(
-    elProperty = 'margin-top',
-    value = '50px',
-    durationInS = 0.5,
-    t: any = this.t
-  ) {
-    if (t.style.transition !== '') {
-      if (!t.style.transition.includes(elProperty)) {
-        t.style.transition += `, ${elProperty} ${durationInS}s`;
-      }
-    } else {
-      t.style.transition = `${elProperty} ${durationInS}s`;
-    }
-
-    const hyphen = elProperty.indexOf('-');
-    if (hyphen > -1) {
-      elProperty =
-        elProperty.substr(0, hyphen) +
-        elProperty.charAt(hyphen + 1).toUpperCase() +
-        elProperty.substr(hyphen + 2, elProperty.length);
-    }
-    t.style[elProperty] = value;
+  isRendered(t: any = this.t) {
+    return t.checkVisiblity();
   }
 
   dispatchEvent(eventName, t: any = this.t) {
     const event = new Event(eventName);
     t.dispatchEvent(event);
     return this;
-  }
-
-  isBrowserES6Compatible() {
-    try {
-      eval('"use strict"; class appLoaderES6Check {}');
-    } catch (e) {
-      return false;
-    }
-    return true;
   }
 
   isPlainObject(t: any = this.t) {
@@ -985,52 +751,8 @@ export class JSVanillaHelper {
     return Object.freeze(t);
   }
 
-  onScroll(
-    {
-      offsetTop = 0,
-      top: topCallback,
-      down: downCallback,
-      up: upCallback,
-      disableFlagMode = false,
-    },
-    t: any = this.t
-  ) {
-    let downFlag = false;
-    let lastScroll = 0;
-    const setOffsetTop = (newOffsetTop) => {
-      offsetTop = newOffsetTop;
-    };
-
-    t.addEventListener('scroll', () => {
-      const currentScroll = window.pageYOffset;
-      if (currentScroll < offsetTop) {
-        if (topCallback) topCallback(setOffsetTop);
-        return;
-      }
-      if (!disableFlagMode) {
-        if (currentScroll > lastScroll && !downFlag) {
-          // down
-          downFlag = true;
-          if (downCallback) downCallback(setOffsetTop);
-        } else if (currentScroll < lastScroll && downFlag) {
-          // up
-          downFlag = false;
-          if (upCallback) upCallback(setOffsetTop);
-        }
-      } else if (currentScroll > lastScroll) {
-        // down
-        if (downCallback) downCallback(setOffsetTop);
-      } else if (currentScroll < lastScroll) {
-        // up
-        if (upCallback) upCallback(setOffsetTop);
-      }
-
-      lastScroll = currentScroll;
-    });
-  }
-
-  initializeApp(setAsMainApp: boolean): void {
-    console.error("App Architecture extension not found in this JSVanillaHelper (Core) instance")
+  createApp(): any {
+    console.error("App Architecture v4 extension not found in this JSVanillaHelper (Core) instance")
   }
 }
 

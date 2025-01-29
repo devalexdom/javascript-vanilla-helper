@@ -51,52 +51,49 @@ export declare class JSVanillaHelper {
     getChild(query: string, t?: Element): Element;
     children(query: string, t?: Element): JSVanillaHelper;
     getChildren(query: string, t?: Element): NodeListOf<Element>;
-    hasOverflow(queryChildrens?: string, overflowCallback?: (el: any) => void, t?: HTMLElement): boolean;
     findElementIn(parent: HTMLElement, t?: any): Element;
     alterFontSize(pixelsIn?: number, t?: any): void;
-    setMaxViewportScale(maximumScale?: string, initialScale?: string): JSVanillaHelper;
-    preventNativeTouchGestures(prevent?: boolean, t?: any): void;
     getData(t?: any): object;
     getArray(t?: any): Array<any>;
     capitalize(t?: any): string;
     hideIf(condition: boolean, displayValue?: string, t?: any): JSVanillaHelper;
     showIf(condition: boolean, displayValue?: string, t?: any): JSVanillaHelper;
     scrollToTarget(yOffset?: number, behavior?: ScrollBehavior, t?: any): void;
-    getItemsCountPerRow(t?: any): number;
     scrollContainerToTarget({ yOffset, xOffset, behavior }: {
         yOffset?: number;
         xOffset?: number;
         behavior?: string;
     }, parentEl?: any, t?: any): void;
-    onFalseEmptyString(t?: any): string;
     isIterable(t?: any): boolean;
     isDateObj(t?: Date): boolean;
     isZeroLength(t?: any): boolean;
     isEmpty(t?: any): boolean;
     onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): object;
     onEvents(eventName: Array<string>, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): JSVanillaHelper;
-    $$(newScope: Function): void;
     get(index?: number): any;
     sel(index: number): JSVanillaHelper;
     log(t?: any): JSVanillaHelper;
     addHelperExtension(extension: IJSVanillaHelper_Extension): JSVanillaHelper;
     removeHelperExtension(extensionName: string): JSVanillaHelper;
     clearLocationHash(): JSVanillaHelper;
-    getTextRenderedSize(font?: string, widthLimit?: number, t?: any): object;
-    getFontUsed(property?: string, t?: any): string;
     getRenderedStyle(property?: string, t?: any): string;
     forEach(iteration: Function, t?: any): JSVanillaHelper;
-    whileEach(iteration: Function, t?: any): JSVanillaHelper;
-    reverseEach(iteration: Function, t?: any): JSVanillaHelper;
     eachOne(helperFunction?: string, args?: any[]): void;
-    waitFor(timeInMs?: number, helperFunction?: string, args?: any[]): JSVanillaHelper;
     objForEach(iteration: Function, t?: any): JSVanillaHelper;
     setAttr(attrName?: string, attrValue?: string, t?: any): JSVanillaHelper;
     setId(id?: string, t?: any): JSVanillaHelper;
     setClass(className?: string, t?: any): JSVanillaHelper;
-    addBrowserClass(t?: any): void;
-    detectBrowser(): string;
-    nextQuerySign(t?: any): "?" | "&";
+    URL(t?: any): this;
+    addGetParameter(name: string, value: string, t?: URL): this;
+    addGetParameters(parameters: Array<{
+        name: string;
+        value: string;
+    }>, t?: URL): this;
+    removeGetParameter(name: string, t?: URL): this;
+    removeGetParameters(parameters: Array<{
+        name: string;
+        value?: string;
+    }>, t?: URL): this;
     newElement(t?: string): JSVanillaHelper;
     appendChild(childElement: Element, t?: Element): JSVanillaHelper;
     setHtml(innerHTML: string, t?: any): JSVanillaHelper;
@@ -120,7 +117,6 @@ export declare class JSVanillaHelper {
     hasClass(className: any, t?: any): any;
     hasClasses(classNamesArr?: any[], t?: any): boolean;
     removeAllChildren(t?: any): this;
-    N(objPropertyStr: any, t?: any): any;
     sortArrayByProperty(property?: string, order?: number, t?: any): void;
     sortArray(order?: number, t?: any): void;
     sortNodeChildsByProperty(property?: string, order?: number, t?: any): void;
@@ -132,7 +128,7 @@ export declare class JSVanillaHelper {
             attributes: boolean;
         };
     }, t?: any): void;
-    resizeObserver(onResize: any, t?: any): void;
+    resizeObserver(onResize: (helper: JSVanillaHelper) => void, t?: any): void;
     onViewportVisibleOnce(isVisibleCallback?: (element: HTMLElement, elementIndex: number) => void, options?: {
         root: any;
         rootMargin: string;
@@ -152,13 +148,9 @@ export declare class JSVanillaHelper {
     setLSWithExpiry(value: any, expiryDate: Date, readOnce?: boolean, key?: any): void;
     getLSWithExpiry(key?: any): any;
     hasAttribute(AttributeName?: string, t?: any): boolean;
-    isVisible(verticalOffset?: number, t?: any): any;
-    isRendered(verticalOffset?: number, t?: any): any;
-    isElementBound(child: any, padding: any, t?: any): boolean;
-    getVisibilityData(verticalOffset?: number, t?: any): any;
-    addAnimation(elProperty?: string, value?: string, durationInS?: number, t?: any): void;
+    isVisible(partiallyVisible?: boolean, t?: any): boolean;
+    isRendered(t?: any): any;
     dispatchEvent(eventName: any, t?: any): this;
-    isBrowserES6Compatible(): boolean;
     isPlainObject(t?: any): boolean;
     getCookie(cName?: string): string;
     setCookie(cName: any, cValue: any, exDays: any): void;
@@ -171,14 +163,7 @@ export declare class JSVanillaHelper {
     removeSearchParameter(name: string, autoHistoryPushState?: boolean, t?: string | Window): string;
     historyPushState(url: string, state?: any, title?: string): void;
     makeInmutable(t?: any): any;
-    onScroll({ offsetTop, top: topCallback, down: downCallback, up: upCallback, disableFlagMode, }: {
-        offsetTop?: number;
-        top: any;
-        down: any;
-        up: any;
-        disableFlagMode?: boolean;
-    }, t?: any): void;
-    initializeApp(setAsMainApp: boolean): void;
+    createApp(): any;
 }
 export declare const defaultHelperInstance: JSVanillaHelper;
 export declare const V: (target?: any) => JSVanillaHelper;

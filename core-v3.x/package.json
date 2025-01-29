@@ -1,6 +1,6 @@
 {
-  "name": "jsvanillahelper-core-legacy",
-  "version": "2.3.3",
+  "name": "jsvanillahelper-core",
+  "version": "3.0.0",
   "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x"
+    "url": "git+https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v3.x"
   },
   "keywords": [
     "javascript",
@@ -33,16 +33,14 @@
     "url": "https://github.com/devalexdom/javascript-vanilla-helper/issues"
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
-  "dependencies": {
-    "rollup": "^4.19.1",
-    "rollup-plugin-typescript2": "^0.36.0"
-  },
   "devDependencies": {
-    "@babel/core": "^7.24.9",
+    "@babel/core": "^7.26.7",
     "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-commonjs": "^26.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/node": "^20.14.12",
-    "typescript": "^5.5.4"
+    "@types/node": "^20.17.16",
+    "rollup": "^4.32.1",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.7.3"
   }
 }
