@@ -49,9 +49,9 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 2.32;
+    this.version = 2.33;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v2.x";
-    this.buildType = 2;
+    this.buildType = 1;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
     this.t = target;
     this.tData = targetData;
@@ -239,7 +239,6 @@ export class JSVanillaHelper {
 
       lastXPos = itemXPos;
       itemsCount++;
-
     }
   }
 
@@ -702,11 +701,11 @@ export class JSVanillaHelper {
     }
   }
 
-  onViewportVisibleOnce(isVisibleCallback = (element: HTMLElement) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
+  onViewportVisibleOnce(isVisibleCallback = (element: HTMLElement, elementIndex: number) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
     const observer = new IntersectionObserver(function (entries, self) {
-      entries.forEach(entry => {
+      entries.forEach((entry, index) => {
         if (entry.isIntersecting) {
-          isVisibleCallback(entry.target as HTMLElement);
+          isVisibleCallback(entry.target as HTMLElement, index);
           self.unobserve(entry.target)//observer passed as self
         }
       });
@@ -734,19 +733,19 @@ export class JSVanillaHelper {
     }
   }
 
-  traceViewportVisibility(isVisibleCallback = (element: HTMLElement) => { }, isHiddenCallback = (element: HTMLElement) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
+  traceViewportVisibility(isVisibleCallback = (element: HTMLElement, elementIndex: number) => { }, isHiddenCallback = (element: HTMLElement, elementIndex: number) => { }, options = { root: null, rootMargin: "0px", threshold: 1.0 }, t: HTMLElement | Array<HTMLElement> = this.t) {
     const observer = new IntersectionObserver(function (entries, self) {
-      entries.forEach(entry => {
+      entries.forEach((entry, index) => {
         const isIntersecting = entry.isIntersecting;
         const wasIntersecting = entry.target["jsvh_isIntersecting"] ?? null;
 
         if (isIntersecting && !wasIntersecting) {
           entry.target["jsvh_isIntersecting"] = true;
-          isVisibleCallback(entry.target as HTMLElement);
+          isVisibleCallback(entry.target as HTMLElement, index);
         }
         else if (!isIntersecting && (wasIntersecting || wasIntersecting === null)) {
           entry.target["jsvh_isIntersecting"] = false;
-          isHiddenCallback(entry.target as HTMLElement);
+          isHiddenCallback(entry.target as HTMLElement, index);
         }
       });
     }, options);
@@ -890,16 +889,19 @@ export class JSVanillaHelper {
   }
 
   getCookie(cName = '') {
-    const name = `${cName}=`;
-    let value = '';
-    this.whileEach((c, i, stop) => {
-      c = c.trim();
-      if (c.indexOf(name) === 0) {
-        value = c.substring(name.length, c.length);
-        stop();
-      }
-    }, document.cookie.split(';'));
-    return value;
+    const cookies = document.cookie;
+    const nameEQ = cName + '=';
+    const cookieStart = cookies.indexOf(nameEQ);
+    if (cookieStart !== -1) {
+      const cookieValueStart = cookieStart + nameEQ.length;
+      const cookieEnd = cookies.indexOf(';', cookieValueStart);
+      const value = cookies.substring(
+        cookieValueStart,
+        cookieEnd !== -1 ? cookieEnd : undefined
+      );
+      return decodeURIComponent(value); // returns first found cookie
+    }
+    return null;
   }
 
   setCookie(cName, cValue, exDays) {

@@ -133,7 +133,7 @@ export declare class JSVanillaHelper {
         };
     }, t?: any): void;
     resizeObserver(onResize: any, t?: any): void;
-    onViewportVisibleOnce(isVisibleCallback?: (element: HTMLElement) => void, options?: {
+    onViewportVisibleOnce(isVisibleCallback?: (element: HTMLElement, elementIndex: number) => void, options?: {
         root: any;
         rootMargin: string;
         threshold: number;
@@ -141,7 +141,7 @@ export declare class JSVanillaHelper {
         stopObserver: () => void;
         getObserver: () => IntersectionObserver;
     };
-    traceViewportVisibility(isVisibleCallback?: (element: HTMLElement) => void, isHiddenCallback?: (element: HTMLElement) => void, options?: {
+    traceViewportVisibility(isVisibleCallback?: (element: HTMLElement, elementIndex: number) => void, isHiddenCallback?: (element: HTMLElement, elementIndex: number) => void, options?: {
         root: any;
         rootMargin: string;
         threshold: number;

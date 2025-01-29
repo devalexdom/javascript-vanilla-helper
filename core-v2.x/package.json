@@ -1,6 +1,6 @@
 {
-  "name": "jsvanillahelper-core",
-  "version": "2.3.2",
+  "name": "jsvanillahelper-core-legacy",
+  "version": "2.3.3",
   "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,8 +34,6 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "dependencies": {
-    "lodash.clonedeep": "^4.5.0",
-    "lodash.merge": "^4.6.2",
     "rollup": "^4.19.1",
     "rollup-plugin-typescript2": "^0.36.0"
   },
