@@ -39,7 +39,7 @@ export class JSVanillaHelper {
   about: string;
   gitSourceUrl: string;
   t: any;
-  tData: any;
+  tData: { [key: string]: any };
   hData: IJSVHData;
   helperExtensions: object;
   hexts: object;
@@ -49,7 +49,7 @@ export class JSVanillaHelper {
     targetData = {},
     helperData: IJSVHData = { reg: { mainAppRef: null, appsRef: {}, workers: {}, pNTouchGesturesHelperFunc: null }, flags: {} }
   ) {
-    this.version = 3.01;
+    this.version = 3.02;
     this.gitSourceUrl = "https://github.com/devalexdom/javascript-vanilla-helper/tree/master/core-v3.x";
     this.buildType = 1;
     this.about = `JSVanillaHelper Core ${this.version} ${JSVHBuildType[this.buildType]} || ${this.gitSourceUrl}`;
@@ -60,7 +60,7 @@ export class JSVanillaHelper {
     this.hexts = this.helperExtensions;
   }
 
-  setTarget(t: any = null, tData: object = {}) {
+  setTarget(t: any = null, tData: { [key: string]: any } = {}) {
     this.t = t;
     this.tData = tData;
     return this;
@@ -74,12 +74,13 @@ export class JSVanillaHelper {
     extendCallback(addMethodToHelper);
   }
 
-  toInt(t: any = this.t) {
-    return parseInt(t);
+  attr(attributeName: string, t: HTMLElement = this.t) {
+    return this.setTarget(t.getAttribute(attributeName));
   }
 
-  toFloat(t: any = this.t) {
-    return parseFloat(t);
+  toNumber(defaultValue: number = 0, t: string | null | undefined = this.t) {
+    const n = Number(t);
+    return this.setTarget((defaultValue || defaultValue === 0) && (Number.isNaN(n) || !t) ? defaultValue : n);
   }
 
   data(dataObjKey: string, t: HTMLElement = this.t) {
@@ -99,7 +100,7 @@ export class JSVanillaHelper {
     return new JSVanillaHelper(this.t, this.hData);
   }
 
-  val(setValue: string, t: HTMLInputElement = this.t) {
+  val(setValue?: string, t: HTMLInputElement = this.t) {
     if (setValue) {
       t.value = setValue;
     }
@@ -136,7 +137,7 @@ export class JSVanillaHelper {
     t.style.fontSize = `${fontSize + pixelsIn}px`;
   }
 
-  getData(t: any = this.t): object {
+  getData(t: any = this.t): HTMLElement["dataset"] {
     return t.dataset;
   }
 
@@ -193,7 +194,7 @@ export class JSVanillaHelper {
     return this.isZeroLength(Object.keys(t));
   }
 
-  onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t: any = this.t): object {
+  onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t: any = this.t): { helper: JSVanillaHelper, removeListener: () => void; } {
     const removeListener = () => {
       t.removeEventListener(eventName, callback, false);
     };

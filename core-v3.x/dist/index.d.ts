@@ -33,27 +33,31 @@ export declare class JSVanillaHelper {
     about: string;
     gitSourceUrl: string;
     t: any;
-    tData: any;
+    tData: {
+        [key: string]: any;
+    };
     hData: IJSVHData;
     helperExtensions: object;
     hexts: object;
     buildType: JSVHBuildType;
     constructor(target?: any, targetData?: {}, helperData?: IJSVHData);
-    setTarget(t?: any, tData?: object): this;
+    setTarget(t?: any, tData?: {
+        [key: string]: any;
+    }): this;
     dynamicallyExtendThisHelper(extendCallback: (addMethodToHelper: (name: string, notLambdaFunction: Function) => void) => void): void;
-    toInt(t?: any): number;
-    toFloat(t?: any): number;
+    attr(attributeName: string, t?: HTMLElement): this;
+    toNumber(defaultValue?: number, t?: string | null | undefined): this;
     data(dataObjKey: string, t?: HTMLElement): this;
     _v(): this;
     _(): JSVanillaHelper;
-    val(setValue: string, t?: HTMLInputElement): string;
+    val(setValue?: string, t?: HTMLInputElement): string;
     child(query: string, t?: Element): JSVanillaHelper;
     getChild(query: string, t?: Element): Element;
     children(query: string, t?: Element): JSVanillaHelper;
     getChildren(query: string, t?: Element): NodeListOf<Element>;
     findElementIn(parent: HTMLElement, t?: any): Element;
     alterFontSize(pixelsIn?: number, t?: any): void;
-    getData(t?: any): object;
+    getData(t?: any): HTMLElement["dataset"];
     getArray(t?: any): Array<any>;
     capitalize(t?: any): string;
     hideIf(condition: boolean, displayValue?: string, t?: any): JSVanillaHelper;
@@ -68,7 +72,10 @@ export declare class JSVanillaHelper {
     isDateObj(t?: Date): boolean;
     isZeroLength(t?: any): boolean;
     isEmpty(t?: any): boolean;
-    onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): object;
+    onEvent(eventName: string, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): {
+        helper: JSVanillaHelper;
+        removeListener: () => void;
+    };
     onEvents(eventName: Array<string>, actionCallback: (event: Event, removeListener: () => void) => void, t?: any): JSVanillaHelper;
     get(index?: number): any;
     sel(index: number): JSVanillaHelper;

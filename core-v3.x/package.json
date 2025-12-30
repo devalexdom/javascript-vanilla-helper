@@ -1,6 +1,6 @@
 {
   "name": "jsvanillahelper-core",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
