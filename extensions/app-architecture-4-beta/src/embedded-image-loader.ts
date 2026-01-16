@@ -156,17 +156,22 @@ export class EmbeddedImageLoaderService {
         const src = this.#getImageUrl(this.#getImageSrcByViewportSize(element, originalSrc), element);
         switch (element.tagName) {
             case "IMG":
-                element.setAttribute("src", src);
-                if (V(element).hasClass('load-feedback')) {
-                    V(element).onEvent('load', () => {
-                        element.classList.add('img-loaded');
-                    });
+                if (element.getAttribute("src") !== src) {
+                    element.setAttribute("src", src);
+                    if (V(element).hasClass('load-feedback')) {
+                        V(element).onEvent('load', () => {
+                            element.classList.add('img-loaded');
+                        });
+                    }
                 }
                 break;
 
             case "DIV":
                 const targetEl = (V(element).hasClass('parent-background-image')) ? element.parentNode as HTMLElement : element;
-                targetEl.style.backgroundImage = `url("${src}")`;
+                const backgroundImageStyleValue = `url("${src}")`;
+                if (targetEl.style.backgroundImage !== backgroundImageStyleValue) {
+                    targetEl.style.backgroundImage = backgroundImageStyleValue;
+                }
                 break;
 
             case "svg":

@@ -19,7 +19,7 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
-        this.#version = "4.0.4 beta";
+        this.#version = "4.0.5 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
@@ -171,8 +171,9 @@ export class App implements Architecture4App {
             console.error(`AppArchitecture: Unable to register instances controller, "${uniqueAlias}" is already registered.`);
             return;
         }
+        const bindedAppHelperCustomizer = this.#customizeAppHelper.bind(this);
 
-        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null);
+        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null, bindedAppHelperCustomizer);
     }
 
     registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void {
@@ -184,8 +185,9 @@ export class App implements Architecture4App {
             console.error(`AppArchitecture: Unable to register instances controller, "${uniqueAlias}" is already registered.`);
             return;
         }
+        const bindedAppHelperCustomizer = this.#customizeAppHelper.bind(this);
 
-        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, null, instanceControllerFunction);
+        this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, null, instanceControllerFunction, bindedAppHelperCustomizer);
     }
 
     #domInstanceVisibleErrorFeedback(instanceDomElement: HTMLElement) {
@@ -209,7 +211,7 @@ export class App implements Architecture4App {
 
     #handleControllerInstancesInit() {
         const handleInstanceCreation = (DOMComponent: HTMLElement, instancesController: EmbeddedInstancesController) => {
-            const instanceReg = instancesController.createComponentInstance(DOMComponent, this.#customizeAppHelper.bind(this));
+            const instanceReg = instancesController.createComponentInstance(DOMComponent);
             if (!this.#DOMComponentInstances[instanceReg.uniqueId]) {
                 this.#DOMComponentInstances[instanceReg.uniqueId] = instanceReg;
             }
@@ -248,7 +250,7 @@ export class App implements Architecture4App {
                             handleInstanceCreation(DOMComponent, modularController);
                         },
                         `${controllerAlias}-script`,
-                        document.head
+                        [], document.head
                     );
                 } catch (error) {
                     this.#reportInlineInitError(DOMComponent, error);
@@ -670,26 +672,28 @@ class EmbeddedInstancesController {
     #componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any) | null;
     #componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any) | null;
     #createdInstancesCount: number;
+    #appHelperCustomizer: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper;
 
-
-    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any)) {
+    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), appHelperCustomizer: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper) {
         this.#createdInstancesCount = 0;
         this.#uniqueAlias = uniqueAlias;
         this.#componentInstanceControllerClass = componentInstanceControllerClass;
         this.#componentInstanceControllerFunction = componentInstanceControllerFunction;
+        this.#appHelperCustomizer = appHelperCustomizer;
     }
 
-    createComponentInstance(DOMComponent: HTMLElement, getCustomAppHelper: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper): DOMComponentInstanceReg {
+    createComponentInstance(DOMComponent: HTMLElement): DOMComponentInstanceReg {
         const uniqueComponentInstanceId = DOMComponent.id ? DOMComponent.id : `${this.#uniqueAlias.replace("Controller", "")}-${this.#createdInstancesCount}`;
         let componentInstance = null;
         if (this.#componentInstanceControllerClass) {
-            const appHelper = getCustomAppHelper(uniqueComponentInstanceId, AppComponentType.DOMInstanceController, DOMComponent);
+            const appHelper = this.#appHelperCustomizer(uniqueComponentInstanceId, AppComponentType.DOMInstanceController, DOMComponent);
             componentInstance = new this.#componentInstanceControllerClass(appHelper);
         }
         else if (this.#componentInstanceControllerFunction) {
-            const appHelper = getCustomAppHelper(uniqueComponentInstanceId, AppComponentType.DOMInstanceFunctionalController, DOMComponent);
+            const appHelper = this.#appHelperCustomizer(uniqueComponentInstanceId, AppComponentType.DOMInstanceFunctionalController, DOMComponent);
             componentInstance = this.#componentInstanceControllerFunction(appHelper);
         }
+        this.#createdInstancesCount++;
         return {
             uniqueId: uniqueComponentInstanceId,
             instancesControllerUniqueId: this.#uniqueAlias,
