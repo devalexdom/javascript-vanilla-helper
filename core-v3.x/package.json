@@ -1,9 +1,15 @@
 {
   "name": "jsvanillahelper-core",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Lightweight Vanilla TypeScript +ES2022 helper with a touch of functional programming, targeted for lightweight client-side webapps.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -34,13 +40,13 @@
   },
   "homepage": "https://github.com/devalexdom/javascript-vanilla-helper#readme",
   "devDependencies": {
-    "@babel/core": "^7.26.7",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@types/node": "^20.17.16",
-    "rollup": "^4.32.1",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "^5.7.3"
+    "@babel/core": "^7.29.7",
+    "@rollup/plugin-babel": "^7.1.0",
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@types/node": "^26.4.0",
+    "rollup": "^4.63.1",
+    "rollup-plugin-typescript2": "^0.37.0",
+    "typescript": "^6.0.3"
   }
 }

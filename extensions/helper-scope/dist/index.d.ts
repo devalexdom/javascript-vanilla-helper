@@ -22,8 +22,8 @@ declare class HelperScope implements IJSVanillaHelper_Extension {
     onAddExtension(): void;
     handleHelperScopeGlobalBind(): void;
     handleExtensionParameters(): void;
-    declare(newScope: IHelperScopeDeclareBind, globalBindAlias?: string): any;
-    handleGlobalHelperScopeInstance(globalBindAlias: string): any;
+    declare(newScope: IHelperScopeDeclareBind, globalBindAlias?: string): HelperScope;
+    handleGlobalHelperScopeInstance(globalBindAlias: string): HelperScope;
     getHelperInstance(scopeAlias: string): any;
     getSelector(selectorMethod: string): any;
     selectScope(scopeAlias: string): HelperScope;

@@ -24,7 +24,7 @@ class HelperScope implements IJSVanillaHelper_Extension {
     flags: object;
     constructor(globalBindAlias?: string) {
         this.extensionName = 'helperScope';
-        this.version = 1.31;
+        this.version = 1.32;
         this.scopes = new Map<string, IHelperScopeBind>();
         this["_"] = this.getSelector;
         this["$cope"] = this.selectScope;

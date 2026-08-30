@@ -12,4 +12,6 @@ declare class AppArchitecture4 implements IJSVanillaHelper_Extension {
     getMainApp(): object;
 }
 declare const helperScope: AppArchitecture4;
+export type { App } from "./architecture-app";
+export type { AppArchitectureHelper, Architecture4App } from "./models";
 export default helperScope;

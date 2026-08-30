@@ -19,7 +19,7 @@ export class App implements Architecture4App {
     #contextVars: { [key: string]: AppContextVar };
 
     constructor(appSetup: Architecture4AppSetup, helper: JSVanillaHelper) {
-        this.#version = "4.0.5 beta";
+        this.#version = "4.0.7 beta";
         this.#id = appSetup.id;
         this.#config = appSetup.config;
         this.#helper = helper;
@@ -105,7 +105,7 @@ export class App implements Architecture4App {
         return this.#config.custom[key] ?? null;
     }
 
-    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
+    registerSimpleController(uniqueAlias = "", controllerClass: (new (appHelper: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerClass) {
             console.error(`AppArchitecture: Unable to register controller, unique alias (${uniqueAlias}) and controllerClass are expected parameters.`);
             return;
@@ -127,7 +127,7 @@ export class App implements Architecture4App {
         }
     }
 
-    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
+    registerFunctionalSimpleController(uniqueAlias = "", controllerFunction: ((appHelper: AppArchitectureHelper) => any), config?: { generateInstanceBeforeInit: false; }): void {
         if (!uniqueAlias || !controllerFunction) {
             console.error(`AppArchitecture: Unable to register controller, unique alias (${uniqueAlias}) and controllerFunction are expected parameters.`);
             return
@@ -149,7 +149,7 @@ export class App implements Architecture4App {
         }
     }
 
-    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
+    registerService(uniqueAlias = "", serviceControllerClass: (new (appHelper: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !serviceControllerClass) {
             console.error(`AppArchitecture: Unable to register service, unique alias (${uniqueAlias}) and serviceControllerClass are expected parameters.`)
             return;
@@ -162,7 +162,7 @@ export class App implements Architecture4App {
         this.#createServiceInstance(uniqueAlias, serviceControllerClass);
     }
 
-    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), config?: {}): void {
+    registerInstancesController(uniqueAlias = "", instanceControllerClass: (new (appHelper: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerClass) {
             console.error(`AppArchitecture: Unable to register instances controller, unique alias (${uniqueAlias}) and instanceControllerClass are expected parameters.`);
             return;
@@ -176,7 +176,7 @@ export class App implements Architecture4App {
         this.#controllers[uniqueAlias] = new EmbeddedInstancesController(uniqueAlias, instanceControllerClass, null, bindedAppHelperCustomizer);
     }
 
-    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), config?: {}): void {
+    registerFunctionalInstancesController(uniqueAlias = "", instanceControllerFunction: ((appHelper: AppArchitectureHelper) => any), config?: {}): void {
         if (!uniqueAlias || !instanceControllerFunction) {
             console.error(`AppArchitecture: Unable to register instances controller, unique alias (${uniqueAlias}) and instanceControllerFunction are expected parameters.`);
             return;
@@ -524,7 +524,7 @@ export class App implements Architecture4App {
         return { ...this.#appHelper, logOnDebug, warnOnDebug, reportError, subscribe, subscribeToAll, getRootDOMElement, whoIam, emit, getContextVar, setContextVar, useVendor };
     }
 
-    #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper?: AppArchitectureHelper) => any)) {
+    #createControllerInstance(uniqueAlias: string, controllerClass: (new (appHelper: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.SimpleController);
             const controllerInstance = new controllerClass(appHelperToInject);
@@ -535,7 +535,7 @@ export class App implements Architecture4App {
         }
     }
 
-    #createFunctionalControllerInstance(uniqueAlias: string, controllerFunction: ((appHelper?: AppArchitectureHelper) => any)) {
+    #createFunctionalControllerInstance(uniqueAlias: string, controllerFunction: ((appHelper: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.SimpleFunctionalController);
             const controllerInstance = controllerFunction(appHelperToInject);
@@ -569,7 +569,7 @@ export class App implements Architecture4App {
         );
     }
 
-    #createServiceInstance(uniqueAlias: string, serviceControllerClass: (new (appHelper?: AppArchitectureHelper) => any)) {
+    #createServiceInstance(uniqueAlias: string, serviceControllerClass: (new (appHelper: AppArchitectureHelper) => any)) {
         try {
             const appHelperToInject = this.#customizeAppHelper(uniqueAlias, AppComponentType.Service);
             const controllerInstance = new serviceControllerClass(appHelperToInject);
@@ -669,12 +669,12 @@ export class App implements Architecture4App {
 
 class EmbeddedInstancesController {
     #uniqueAlias: string;
-    #componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any) | null;
-    #componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any) | null;
+    #componentInstanceControllerClass: (new (appHelper: AppArchitectureHelper) => any) | null;
+    #componentInstanceControllerFunction: ((appHelper: AppArchitectureHelper) => any) | null;
     #createdInstancesCount: number;
     #appHelperCustomizer: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper;
 
-    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper?: AppArchitectureHelper) => any), componentInstanceControllerFunction: ((appHelper?: AppArchitectureHelper) => any), appHelperCustomizer: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper) {
+    constructor(uniqueAlias: string, componentInstanceControllerClass: (new (appHelper: AppArchitectureHelper) => any), componentInstanceControllerFunction: ((appHelper: AppArchitectureHelper) => any), appHelperCustomizer: (uniqueAlias: string, controllerType: AppComponentType, instanceRootDOMElement?: HTMLElement) => AppArchitectureHelper) {
         this.#createdInstancesCount = 0;
         this.#uniqueAlias = uniqueAlias;
         this.#componentInstanceControllerClass = componentInstanceControllerClass;

@@ -8,7 +8,7 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
     helper: JSVanillaHelper;
     constructor() {
         this.extensionName = 'AppArchitecture';
-        this.version = 4.05;
+        this.version = 4.07;
     }
 
     extendHelperInstance(helper) {
@@ -71,4 +71,6 @@ class AppArchitecture4 implements IJSVanillaHelper_Extension {
 }
 
 const helperScope = new AppArchitecture4;
+export type { App } from "./architecture-app";
+export type { AppArchitectureHelper, Architecture4App } from "./models";
 export default helperScope;
